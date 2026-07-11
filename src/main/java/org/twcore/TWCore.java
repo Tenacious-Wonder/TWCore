@@ -36,7 +36,7 @@ public class TWCore implements ModInitializer {
      * @see TwModManager
      */
     private void register() {
-        TwModManager.IMPL.register(MOD_ID, 2);
+        TwModManager.IMPL.register(MOD_ID, 3);
     }
 
     // ==================== 其他注册逻辑 ====================
