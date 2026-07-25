@@ -71,7 +71,7 @@ public record ContainerStack(ContainerType container, @Nullable Content content,
                           @NotNull ItemStack originalStack) {
         this.container = Objects.requireNonNull(container, "Container cannot be null");
         this.content = content;
-        this.originalStack = Objects.requireNonNull(originalStack, "Original stack cannot be null");
+        this.originalStack = originalStack.copy();
     }
 
     public boolean isEmpty() {
