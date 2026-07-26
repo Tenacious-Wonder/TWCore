@@ -1,11 +1,14 @@
 package org.twcore.api.config;
 
+import org.jetbrains.annotations.Nullable;
 import org.twcore.api.TwCoreClientRegistrar;
 import org.twcore.api.TwModManager;
 import org.twcore.config.ConfigInfluencer;
 import org.twcore.config.ConfigManager;
 import org.twcore.config.ConfigSide;
 import org.twcore.config.ConfigType;
+
+import java.util.function.Function;
 
 /**
  * <h1>TW Core 配置注册入口</h1>
@@ -76,6 +79,50 @@ public final class TwConfig {
 
     private TwConfig(String modId) {
         this.modId = modId;
+    }
+
+    /**
+     * 根据模组 ID 和配置名称获取已加载的配置数据。
+     *
+     * @param modId      配置所属模组的 ID
+     * @param configName 配置名称
+     * @param <T>        预期的配置数据类型
+     * @return 配置数据实例，如果指定配置尚未加载则返回 {@code null}
+     */
+    @Nullable
+    public static <T> T get(String modId, String configName) {
+        return ConfigManager.get(modId, configName);
+    }
+
+    /**
+     * 根据模组 ID 和 {@link ConfigType} 获取已加载的配置数据。
+     * 实际通过 {@link ConfigType#name()} 查找对应的配置。
+     *
+     * @param modId 配置所属模组的 ID
+     * @param type  配置的元信息（仅用于提取配置名称）
+     * @param <T>   配置数据类型，与 {@code type} 的泛型参数一致
+     * @return 配置数据实例，如果指定配置尚未加载则返回 {@code null}
+     */
+    @Nullable
+    public static <T> T get(String modId, ConfigType<T> type) {
+        return ConfigManager.get(modId, type.name());
+    }
+
+    /**
+     * 安全更新配置数据，修改后自动持久化到文件。
+     * <p>
+     * 接收一个函数，将当前配置数据转换为更新后的数据。
+     * 保存时会重新计算版本号，保证文件与当前有效版本一致。
+     * </p>
+     *
+     * @param modId      配置所属模组的 ID
+     * @param configName 配置名称
+     * @param updater    接收旧数据并返回新数据的函数
+     * @param <T>        配置数据类型
+     * @throws IllegalStateException 如果指定配置尚未加载
+     */
+    public static <T> void update(String modId, String configName, Function<T, T> updater) {
+        ConfigManager.update(modId, configName, updater);
     }
 
     /**
