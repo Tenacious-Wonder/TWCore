@@ -17,6 +17,8 @@ import org.twcore.environment.ClimateQueryImpl;
  *   <li>高度衰减（海拔越高温度越低、越干燥）</li>
  * </ul>
  * 所有逻辑委托给 {@link ClimateQueryImpl} 实现。
+ *
+ * @since 1.0.3
  */
 public class ClimateQuery {
 

@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.twcore.api.TwModManager;
+import org.twcore.api.event.TwCoreRegisterEvent;
 import org.twcore.blockpile.CubeBlockPileManager;
 import org.twcore.process.playeraction.PlayerActionFactory;
 import org.twcore.process.playeraction.impl.AddContentPlayerAction;
@@ -20,7 +21,7 @@ public class TWCore implements ModInitializer {
     @Override
     public void onInitialize() {
         RegistryInit.init();
-        register();
+        TwCoreRegisterEvent.TW_CORE_REGISTRAR.register(TWCore::register);
 
         // 杂项
         ContainerTypes.initDefaultMappings();
@@ -35,7 +36,7 @@ public class TWCore implements ModInitializer {
      *
      * @see TwModManager
      */
-    private void register() {
+    private static void register() {
         TwModManager.IMPL.register(MOD_ID, 3);
     }
 

@@ -9,6 +9,8 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.twcore.TWCore;
 import org.twcore.api.TwModManager;
+import org.twcore.api.config.ConfigInfluencer;
+import org.twcore.api.config.ConfigType;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -33,10 +35,10 @@ import java.util.function.Function;
  *
  * <h2>分端加载</h2>
  * <p>
- * 配置根据 {@link ConfigSide} 分为两类：
+ * 配置根据 {@link ConfigInfluencer.ConfigSide} 分为两类：
  * <ul>
- *   <li>{@link ConfigSide#COMMON} —— 双端通用配置，在双端注册完成后立即加载。</li>
- *   <li>{@link ConfigSide#CLIENT} —— 仅客户端配置，在客户端专属注册完成后加载。</li>
+ *   <li>{@link ConfigInfluencer.ConfigSide#COMMON} —— 双端通用配置，在双端注册完成后立即加载。</li>
+ *   <li>{@link ConfigInfluencer.ConfigSide#CLIENT} —— 仅客户端配置，在客户端专属注册完成后加载。</li>
  * </ul>
  * 外部需要分别在对应时机调用 {@link #loadCommon()} 和 {@link #loadClient()}。
  * {@code loadClient()} 仅在物理客户端调用。
@@ -66,7 +68,7 @@ import java.util.function.Function;
  *
  * @see ConfigType
  * @see ConfigInfluencer
- * @see ConfigSide
+ * @see ConfigInfluencer.ConfigSide
  */
 public final class ConfigManager {
     private static final Logger LOGGER = TWCore.LOGGER;
@@ -121,25 +123,25 @@ public final class ConfigManager {
     // ========== 分端加载阶段 ==========
 
     /**
-     * 加载所有 {@link ConfigSide#COMMON} 配置。
+     * 加载所有 {@link ConfigInfluencer.ConfigSide#COMMON} 配置。
      * 应在双端通用注册全部完成后调用。
      */
     public static synchronized void loadCommon() {
-        loadBySide(ConfigSide.COMMON);
+        loadBySide(ConfigInfluencer.ConfigSide.COMMON);
     }
 
     /**
-     * 加载所有 {@link ConfigSide#CLIENT} 配置。
+     * 加载所有 {@link ConfigInfluencer.ConfigSide#CLIENT} 配置。
      * 仅在物理客户端调用，应在客户端专属注册完成后执行。
      */
     public static synchronized void loadClient() {
-        loadBySide(ConfigSide.CLIENT);
+        loadBySide(ConfigInfluencer.ConfigSide.CLIENT);
     }
 
     /**
      * 遍历已注册条目，加载指定端的所有配置。
      */
-    private static void loadBySide(ConfigSide targetSide) {
+    private static void loadBySide(ConfigInfluencer.ConfigSide targetSide) {
         if (entries.isEmpty()) return;
         try {
             Files.createDirectories(BASE_DIR);

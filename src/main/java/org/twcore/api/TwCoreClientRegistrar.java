@@ -1,5 +1,6 @@
 package org.twcore.api;
 
+import org.twcore.api.config.ConfigInfluencer;
 import org.twcore.api.event.TwCoreClientRegisterEvent;
 
 /**
@@ -15,7 +16,7 @@ import org.twcore.api.event.TwCoreClientRegisterEvent;
  * 在 {@link #registerClient()} 方法内，子模组通常需要完成：
  * <ul>
  *     <li>通过 {@code TwConfig.forMod(modId).registerClientConfig()}
- *         注册标记为 {@link org.twcore.config.ConfigSide#CLIENT} 的配置；</li>
+ *         注册标记为 {@link ConfigInfluencer.ConfigSide#CLIENT} 的配置；</li>
  *     <li>通过 {@code TwConfig.forMod(modId).addDefaultOverride()}
  *         为其他模组的客户端配置提供默认值影响器；</li>
  *     <li>其他纯客户端操作（如注册按键绑定、GUI 工厂等）。</li>
@@ -37,7 +38,7 @@ import org.twcore.api.event.TwCoreClientRegisterEvent;
  * <b>强烈建议不要在任何注册逻辑中依赖其他模组的注册顺序或状态</b>。
  * 跨模组协作（如为其他模组的配置添加默认值）应始终通过
  * {@code TwConfig.addDefaultOverride()} 提交
- * {@link org.twcore.config.ConfigInfluencer 影响器}，
+ * {@link ConfigInfluencer 影响器}，
  * 由目标模组在配置加载时统一处理。这确保了代码在所有注册阶段都健壮且
  * 顺序无关。
  * </p>

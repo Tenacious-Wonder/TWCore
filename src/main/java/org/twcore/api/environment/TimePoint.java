@@ -9,8 +9,8 @@ import org.twcore.environment.TimePointImp;
  * 时刻基于世界总刻数（tick）定义，通过 {@link #of(long)} 从任意刻数创建，
  * 或通过 {@link #fromWorld(World)} 从当前世界创建。
  * 所有时间运算方法均返回新的 {@code TimePoint} 实例，不会修改原对象。
- * <p>
- * 实现了 {@link Comparable}，可按时间先后进行自然排序。
+ *
+ * @since 1.0.3
  */
 public interface TimePoint extends Comparable<TimePoint> {
 

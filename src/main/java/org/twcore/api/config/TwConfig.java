@@ -3,10 +3,7 @@ package org.twcore.api.config;
 import org.jetbrains.annotations.Nullable;
 import org.twcore.api.TwCoreClientRegistrar;
 import org.twcore.api.TwModManager;
-import org.twcore.config.ConfigInfluencer;
 import org.twcore.config.ConfigManager;
-import org.twcore.config.ConfigSide;
-import org.twcore.config.ConfigType;
 
 import java.util.function.Function;
 
@@ -18,9 +15,9 @@ import java.util.function.Function;
  * 然后调用以下方法：
  * <ul>
  *     <li>{@link #registerConfig(ConfigType)} —— 注册双端通用配置
- *         （{@link ConfigSide#COMMON}）。</li>
+ *         （{@link ConfigInfluencer.ConfigSide#COMMON}）。</li>
  *     <li>{@link #registerClientConfig(ConfigType)} —— 注册仅客户端配置
- *         （{@link ConfigSide#CLIENT}）。</li>
+ *         （{@link ConfigInfluencer.ConfigSide#CLIENT}）。</li>
  *     <li>{@link #addDefaultOverride(String, String, Object)}
  *         —— 向任意已注册或尚未注册的目标配置提供默认值影响器。</li>
  * </ul>
@@ -62,7 +59,7 @@ import java.util.function.Function;
  *     MyUiConfig.CODEC,
  *     influencers -> MyUiConfig.createDefault(),
  *     null,
- *     ConfigSide.CLIENT
+ *     ConfigInfluencer.ConfigSide.CLIENT
  * ));
  *
  * // 为其他模组的配置添加默认值
@@ -88,6 +85,7 @@ public final class TwConfig {
      * @param configName 配置名称
      * @param <T>        预期的配置数据类型
      * @return 配置数据实例，如果指定配置尚未加载则返回 {@code null}
+     * @since 1.0.3
      */
     @Nullable
     public static <T> T get(String modId, String configName) {
@@ -102,6 +100,7 @@ public final class TwConfig {
      * @param type  配置的元信息（仅用于提取配置名称）
      * @param <T>   配置数据类型，与 {@code type} 的泛型参数一致
      * @return 配置数据实例，如果指定配置尚未加载则返回 {@code null}
+     * @since 1.0.3
      */
     @Nullable
     public static <T> T get(String modId, ConfigType<T> type) {
@@ -146,12 +145,12 @@ public final class TwConfig {
      * 注册一个双端通用配置。
      * 配置将在通用注册完成后由 {@link ConfigManager#loadCommon()} 加载。
      *
-     * @param type 配置元信息，其 {@code side} 必须为 {@link ConfigSide#COMMON}
+     * @param type 配置元信息，其 {@code side} 必须为 {@link ConfigInfluencer.ConfigSide#COMMON}
      * @param <T>  配置数据类型
      * @throws IllegalArgumentException 如果配置类型不是 {@code COMMON}
      */
     public <T> void registerConfig(ConfigType<T> type) {
-        if (type.side() != ConfigSide.COMMON) {
+        if (type.side() != ConfigInfluencer.ConfigSide.COMMON) {
             throw new IllegalArgumentException(
                     "Config '" + type.name() + "' is marked as " + type.side() +
                             ". Use registerClientConfig() for CLIENT configs."
@@ -165,12 +164,12 @@ public final class TwConfig {
      * 仅在物理客户端生效，将由 {@link ConfigManager#loadClient()} 加载。
      * <p>此方法应在 {@link TwCoreClientRegistrar#registerClient()} 中调用。</p>
      *
-     * @param type 配置元信息，其 {@code side} 必须为 {@link ConfigSide#CLIENT}
+     * @param type 配置元信息，其 {@code side} 必须为 {@link ConfigInfluencer.ConfigSide#CLIENT}
      * @param <T>  配置数据类型
      * @throws IllegalArgumentException 如果配置类型不是 {@code CLIENT}
      */
     public <T> void registerClientConfig(ConfigType<T> type) {
-        if (type.side() != ConfigSide.CLIENT) {
+        if (type.side() != ConfigInfluencer.ConfigSide.CLIENT) {
             throw new IllegalArgumentException(
                     "Config '" + type.name() + "' is marked as " + type.side() +
                             ". Use registerConfig() for COMMON configs."

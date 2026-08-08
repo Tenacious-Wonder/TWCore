@@ -2,7 +2,7 @@ package org.twcore.api;
 
 import org.twcore.api.config.TwConfig;
 import org.twcore.api.event.TwCoreRegisterEvent;
-import org.twcore.config.ConfigType;
+import org.twcore.api.config.ConfigType;
 
 /**
  * <h1>TW Core 统一注册入口</h1>

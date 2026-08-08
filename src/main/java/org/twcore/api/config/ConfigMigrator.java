@@ -1,4 +1,4 @@
-package org.twcore.config;
+package org.twcore.api.config;
 
 import com.google.gson.JsonElement;
 import com.mojang.serialization.DataResult;
