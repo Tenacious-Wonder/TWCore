@@ -363,22 +363,31 @@ public abstract class AbstractProcess<T> {
 
     // ============ 状态信息展示方法 ============
 
-    /**
-     * 返回流程状态的字符串表示。
-     * <p>
-     * 输出格式易于阅读，包含流程的基本状态信息。
-     * 子类可以通过重写{@link #shouldShowStepList()}和{@link #getCustomStatusInfo()}
-     * 来定制输出内容。
-     * </p>
-     *
-     * @return 流程状态的字符串表示
-     */
     @Override
     public String toString() {
+        return getClass().getName()
+                + "{active=" + isActive
+                + ", currentStep=" + (currentStepId != null ? currentStepId : "<none>")
+                + ", previousStep=" + (previousStepId != null ? previousStepId : "<none>")
+                + ", initialStep=" + getInitialStepId()
+                + ", registeredSteps=" + steps.size()
+                + "}";
+    }
+
+    /**
+     * 返回流程状态的详细多行展示。
+     * <p>
+     * 包含流程的核心状态、已注册步骤列表（当 {@link #shouldShowStepList()} 返回 true 时）
+     * 以及子类通过 {@link #getCustomStatusInfo()} 提供的自定义信息，适合人工阅读。
+     * </p>
+     *
+     * @return 流程状态的详细展示文本
+     * @since 1.0.3
+     */
+    public String getStatusDetail() {
         StringBuilder sb = new StringBuilder();
 
-        // 标题行
-        sb.append("=== Process Status ===\n");
+        sb.append("\n");
         sb.append("Class: ").append(getClass().getName()).append("\n");
         sb.append("Active: ").append(isActive).append("\n");
         sb.append("Current Step: ").append(currentStepId != null ? currentStepId : "<none>").append("\n");
@@ -402,7 +411,6 @@ public abstract class AbstractProcess<T> {
             }
         }
 
-        sb.append("======================");
         return sb.toString();
     }
 
@@ -422,7 +430,7 @@ public abstract class AbstractProcess<T> {
     /**
      * 获取子类自定义的状态信息。
      * <p>
-     * 子类可以重写此方法来添加额外的状态信息到toString输出中。
+     * 子类可以重写此方法来添加额外的状态信息到{@link #getStatusDetail()}输出中。
      * 返回的字符串应该以多行形式组织，每行代表一个状态条目。
      * 例如：
      * <pre>
@@ -445,7 +453,10 @@ public abstract class AbstractProcess<T> {
      * </p>
      *
      * @return 简明的状态摘要
+     * @deprecated 请使用 {@link #getStatusDetail()} 获取详细展示，或使用 {@link #toString()}
+     *             获取标准对象表示；此方法将在后续版本中移除。
      */
+    @Deprecated
     public String getStatusSummary() {
         return String.format("[%s] Active: %s, Current: %s, Previous: %s",
                 getClass().getSimpleName(),
