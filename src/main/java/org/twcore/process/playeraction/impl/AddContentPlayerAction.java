@@ -196,4 +196,27 @@ public class AddContentPlayerAction extends PlayerAction {
     public String getType() {
         return TYPE;
     }
+
+    /**
+     * 返回该操作要求的内容物。
+     *
+     * <p>修复：此前本操作未暴露内部字段访问器，外部只能解析 {@link #toString()} 获取内容物，
+     * 现与 {@link AddItemPlayerAction} 对齐提供访问器。</p>
+     *
+     * @return 内容物
+     * @since 1.0.3
+     */
+    public Content getContent() {
+        return content;
+    }
+
+    /**
+     * 返回该操作要求的内容物数量。
+     *
+     * @return 内容物数量
+     * @since 1.0.3
+     */
+    public int getCount() {
+        return count;
+    }
 }
