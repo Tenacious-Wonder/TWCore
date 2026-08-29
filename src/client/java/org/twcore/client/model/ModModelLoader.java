@@ -14,9 +14,9 @@ public class ModModelLoader implements ModelLoadingPlugin {
 
     @Override
     public void onInitializeModelLoader(Context pluginContext) {
-        // 获取已加载的模型规则配置
+        // 获取已加载的模型规则配置。权威读取保证非空：若未注册或未加载会抛异常。
         ModelLoadingRulesData data = TwConfig.get(TWCore.MOD_ID, ClientConfigs.MODEL_LOADING_RULES);
-        if (data == null || data.rules().isEmpty()) {
+        if (data.rules().isEmpty()) {
             return;
         }
 

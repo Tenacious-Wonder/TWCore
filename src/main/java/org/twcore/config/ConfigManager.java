@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -175,11 +176,7 @@ public final class ConfigManager {
                 .toList();
 
         // 3. 计算有效版本号 = 来源模组版本 + 所有有效影响器来源模组版本之和
-        int sourceVersion = TwModManager.IMPL.getRegisteredVersion(key.modId());
-        int influencerVersionSum = validInfluencers.stream()
-                .mapToInt(ConfigInfluencer::sourceModVersion)
-                .sum();
-        int effectiveVersion = sourceVersion + influencerVersionSum;
+        int effectiveVersion = computeEffectiveVersion(key);
 
         // 4. 调用默认值工厂生成最终默认值
         T finalDefault;
@@ -234,9 +231,11 @@ public final class ConfigManager {
             }
         }
 
-        // 6. 若加载失败（data 仍为 null），使用最终默认值覆写
+        // 6. 若加载失败（data 仍为 null），使用最终默认值覆写。
+        //    此时即将覆盖磁盘上的原文件，先备份，以免用户手改的配置丢失。
         if (data == null) {
             data = finalDefault;
+            backupExistingConfig(key);
         }
 
         // 7. 存入缓存并保存文件（确保文件版本与当前有效版本一致）
@@ -283,6 +282,41 @@ public final class ConfigManager {
     }
 
     /**
+     * 权威化读取一个已注册的配置数据。
+     * <p>
+     * 与 {@link #get(String, String)} 的宽松语义不同，本方法要求配置<b>必然</b>
+     * 可被读取：只要 (modId, name) 已注册，就保证返回非空数据。它是配置类型可读性的
+     * <b>权威入口</b>——传入的 {@link ConfigType} 既是查找依据，也是注册校验依据。
+     * </p>
+     * <p>
+     * 配置文件本质上是"注册后统一加载"的模型：{@code loadCommon()}/{@code loadClient()}
+     * 应在各端注册完成后被调用。若在加载前读取，本方法会显式抛错，把时序错误从
+     * 静默的 {@code null} 变成可定位的异常，而不是让调用方在错误时机拿到空数据。
+     * </p>
+     *
+     * @param modId 配置所属模组 ID
+     * @param type  配置元信息
+     * @param <T>   配置数据类型
+     * @return 已加载的配置数据，永不为 {@code null}
+     * @throws IllegalStateException 如果配置类型未注册，或已注册但尚未加载
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T getRequired(String modId, ConfigType<T> type) {
+        ModConfigKey key = new ModConfigKey(modId, type.name());
+        if (!entries.containsKey(key)) {
+            throw new IllegalStateException("Config type not registered: " + modId + "/" + type.name());
+        }
+        Object data = dataCache.get(key);
+        if (data == null) {
+            throw new IllegalStateException(
+                    "Config type '" + modId + "/" + type.name() + "' is registered but not loaded yet. "
+                            + "Load it via loadCommon()/loadClient() before reading."
+            );
+        }
+        return (T) data;
+    }
+
+    /**
      * 更新配置，修改后自动保存到文件。
      *
      * @param modId      配置所属模组 ID
@@ -301,12 +335,7 @@ public final class ConfigManager {
         dataCache.put(key, newData);
 
         // 重新计算版本并保存
-        int sourceVersion = TwModManager.IMPL.getRegisteredVersion(modId);
-        int influencerSum = pendingInfluencers.getOrDefault(key, Collections.emptyList()).stream()
-                .filter(inf -> TwModManager.IMPL.isRegistered(inf.sourceModId()))
-                .mapToInt(ConfigInfluencer::sourceModVersion)
-                .sum();
-        saveConfig(key, newData, sourceVersion + influencerSum);
+        saveConfig(key, newData, computeEffectiveVersion(key));
     }
 
     // ========== 工具方法 ==========
@@ -318,6 +347,48 @@ public final class ConfigManager {
             JsonObject wrapper = new JsonObject();
             wrapper.add("value", json);
             return wrapper;
+        }
+    }
+
+    /**
+     * 计算配置当前的有效版本号。
+     * <p>
+     * 有效版本 = 配置所属模组版本 + 所有<b>来源模组已注册</b>的影响器版本之和。
+     * 加载与更新共用同一逻辑，避免两处各自计算导致不一致。
+     * </p>
+     *
+     * @param key 配置键
+     * @return 该配置当前的有效版本号
+     */
+    private static int computeEffectiveVersion(ModConfigKey key) {
+        int sourceVersion = TwModManager.IMPL.getRegisteredVersion(key.modId());
+        int influencerVersionSum = pendingInfluencers.getOrDefault(key, Collections.emptyList()).stream()
+                .filter(inf -> TwModManager.IMPL.isRegistered(inf.sourceModId()))
+                .mapToInt(ConfigInfluencer::sourceModVersion)
+                .sum();
+        return sourceVersion + influencerVersionSum;
+    }
+
+    /**
+     * 在覆写磁盘上的配置原文件前，备份现有内容为 {@code .bak}。
+     * <p>
+     * 仅用于"加载失败后回退默认值"这一覆盖场景，避免用户已手改的配置
+     * 在默认值覆盖时被永久丢失。常规更新保存不会触发备份。
+     * </p>
+     *
+     * @param key 配置键
+     */
+    private static void backupExistingConfig(ModConfigKey key) {
+        Path file = BASE_DIR.resolve(key.modId()).resolve(key.configName() + ".json");
+        if (!Files.exists(file)) {
+            return;
+        }
+        Path backup = BASE_DIR.resolve(key.modId()).resolve(key.configName() + ".json.bak");
+        try {
+            Files.copy(file, backup, StandardCopyOption.REPLACE_EXISTING);
+            LOGGER.warn("Config '{}' failed to load; original backed up to '{}'", key, backup.getFileName());
+        } catch (IOException e) {
+            LOGGER.error("Failed to backup original config '{}' before override", key, e);
         }
     }
 }

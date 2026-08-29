@@ -79,7 +79,18 @@ public final class TwConfig {
     }
 
     /**
-     * 根据模组 ID 和配置名称获取已加载的配置数据。
+     * 根据模组 ID 和配置名称<b>尝试</b>读取已加载的配置数据。
+     * <p>
+     * 这是<b>软联动</b>式的宽松读取：仅当指定的配置已加载时才返回数据，
+     * 否则返回 {@code null}。适用于"目标配置可能不存在、应被静默跳过"的场景，
+     * 例如读取另一个<b>可选集成</b>模组的配置。它不会校验配置是否已注册，
+     * 因此无法区分"配置未注册"与"配置未加载"。
+     * </p>
+     * <p>
+     * 若你持有的是 {@link ConfigType}（类型安全、且要求配置<b>必然存在</b>），
+     * 请改用 {@link #get(String, ConfigType)} 的权威版本，它会校验注册并在
+     * 无法读取时报错。
+     * </p>
      *
      * @param modId      配置所属模组的 ID
      * @param configName 配置名称
@@ -93,18 +104,25 @@ public final class TwConfig {
     }
 
     /**
-     * 根据模组 ID 和 {@link ConfigType} 获取已加载的配置数据。
-     * 实际通过 {@link ConfigType#name()} 查找对应的配置。
+     * 根据模组 ID 和 {@link ConfigType} 权威化获取已加载的配置数据。
+     * <p>
+     * 与 {@link #get(String, String)} 的宽松语义不同，本方法要求配置<b>必然</b>
+     * 可被读取。{@link ConfigType} 携带了完整注册元信息，因此本方法会校验该配置
+     * 类型是否已注册并<b>保证返回非空数据</b>：未注册、或已注册但尚未加载
+     * （见 {@link ConfigManager#loadCommon()} 与 {@link ConfigManager#loadClient()}）
+     * 都会抛出异常，而不是静默返回 {@code null}。这能及早暴露配置注册遗漏或
+     * 加载时序错误，避免调用方在错误时机拿到空数据。
+     * </p>
      *
      * @param modId 配置所属模组的 ID
-     * @param type  配置的元信息（仅用于提取配置名称）
+     * @param type  配置的元信息（既用于查找配置，也用于校验注册）
      * @param <T>   配置数据类型，与 {@code type} 的泛型参数一致
-     * @return 配置数据实例，如果指定配置尚未加载则返回 {@code null}
+     * @return 已加载的配置数据实例，永不为 {@code null}
+     * @throws IllegalStateException 如果配置类型未注册，或已注册但尚未加载
      * @since 1.0.3
      */
-    @Nullable
     public static <T> T get(String modId, ConfigType<T> type) {
-        return ConfigManager.get(modId, type.name());
+        return ConfigManager.getRequired(modId, type);
     }
 
     /**
