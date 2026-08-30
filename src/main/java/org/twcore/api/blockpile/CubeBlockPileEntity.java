@@ -6,6 +6,9 @@ import org.twcore.blockpile.ClientCubeBlockPileReference;
 import org.twcore.blockpile.ServerCubeBlockPileReference;
 
 /**
+ * <p><b>已废弃</b>：方块堆系统已被 {@link org.twcore.api.blockvolume.BlockVolume}（方块体）系列取代，
+ * 本类型将在未来版本移除。新代码请迁移到 {@code org.twcore.api.blockvolume} 包。</p>
+ *
  * 表示可以保存方块堆引用的方块实体接口。
  *
  * <p>任何需要与方块堆系统交互的方块实体都应该实现此接口，
@@ -21,6 +24,7 @@ import org.twcore.blockpile.ServerCubeBlockPileReference;
  * @see ServerCubeBlockPileReference
  * @see ClientCubeBlockPileReference
  */
+@Deprecated
 public interface CubeBlockPileEntity {
 
     /**

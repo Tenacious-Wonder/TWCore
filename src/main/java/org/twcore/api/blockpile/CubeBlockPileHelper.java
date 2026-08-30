@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Objects;
 
 /**
+ * <p><b>已废弃</b>：方块堆系统已被 {@link org.twcore.api.blockvolume.BlockVolume}（方块体）系列取代，
+ * 本类型将在未来版本移除。新代码请迁移到 {@code org.twcore.api.blockvolume} 包。</p>
+ *
  * 方块堆操作助手 - 处理方块放置和破坏时的方块堆逻辑
  *
  * <p>该类作为方块堆系统的协调器，负责处理方块生命周期事件并维护方块堆结构的完整性。
@@ -33,6 +36,7 @@ import java.util.Objects;
  * @see CubeBlockPile
  * @see CubeBlockPileManager
  */
+@Deprecated
 public class CubeBlockPileHelper {
     private static final Logger LOGGER = TWCore.LOGGER;
 

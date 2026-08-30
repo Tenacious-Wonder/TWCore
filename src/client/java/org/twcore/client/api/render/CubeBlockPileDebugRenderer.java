@@ -9,10 +9,14 @@ import org.twcore.api.blockpile.CubeBlockPile;
 import org.twcore.api.blockpile.CubeBlockPileReference;
 
 /**
+ * <p><b>已废弃</b>：方块堆系统已被 {@link org.twcore.api.blockvolume.BlockVolume}（方块体）系列取代，
+ * 本类型将在未来版本移除。新代码请迁移到 {@code org.twcore.client.api.render.BlockVolumeDebugRenderer}。</p>
+ *
  * 对应用了{@link CubeBlockPile}的方块添加显示方块堆信息的效果
  * <p>该渲染类会在方块的上方渲染出方块堆的信息便于调试</p>
  * @param <T> 对应的方块实体
  */
+@Deprecated
 public interface CubeBlockPileDebugRenderer<T extends BlockEntity> {
 
     /**

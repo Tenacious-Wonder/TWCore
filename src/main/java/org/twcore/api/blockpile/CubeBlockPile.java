@@ -13,6 +13,9 @@ import org.twcore.blockpile.ServerCubeBlockPileReference;
 import java.util.*;
 
 /**
+ * <p><b>已废弃</b>：方块堆系统已被 {@link org.twcore.api.blockvolume.BlockVolume}（方块体）系列取代，
+ * 本类型将在未来版本移除。新代码请迁移到 {@code org.twcore.api.blockvolume} 包。</p>
+ *
  * 管理由同种方块组成的立方体区域的方块堆结构实例。
  *
  * <p>该类代表世界中一个具体的方块堆结构，自动处理结构的完整性检查、拆分和合并。
@@ -48,6 +51,7 @@ import java.util.*;
  * @see CubeBlockPileManager
  * @see CubeBlockPileHelper
  */
+@Deprecated
 public class CubeBlockPile implements AutoCloseable {
     private static final Logger LOGGER = TWCore.LOGGER;
 

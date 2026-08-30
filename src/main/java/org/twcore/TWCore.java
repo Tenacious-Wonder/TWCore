@@ -1,13 +1,13 @@
 package org.twcore;
 
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.twcore.api.TwModManager;
 import org.twcore.api.event.TwCoreRegisterEvent;
-import org.twcore.blockpile.CubeBlockPileManager;
+import org.twcore.blockvolume.BlockVolumeAttachments;
+import org.twcore.blockvolume.BlockVolumeManager;
 import org.twcore.process.playeraction.PlayerActionFactory;
 import org.twcore.process.playeraction.impl.AddContentPlayerAction;
 import org.twcore.process.playeraction.impl.AddItemPlayerAction;
@@ -25,7 +25,7 @@ public class TWCore implements ModInitializer {
 
         // 杂项
         ContainerTypes.initDefaultMappings();
-        cubeBlockPileInit();
+        blockVolumeInit();
         registerDefaultAction();
 
         LOGGER.info("TW`s Core is initializing!");
@@ -43,13 +43,14 @@ public class TWCore implements ModInitializer {
     // ==================== 其他注册逻辑 ====================
 
     /**
-     * 方块堆事件注册。
+     * 方块体事件注册。
      *
-     * @see org.twcore.api.blockpile.CubeBlockPile
+     * @see org.twcore.api.blockvolume.BlockVolume
      */
-    private static void cubeBlockPileInit(){
-        ServerWorldEvents.LOAD.register(CubeBlockPileManager::onWorldStart);
-        ServerLifecycleEvents.SERVER_STOPPING.register(CubeBlockPileManager::onServerStopping);
+    private static void blockVolumeInit(){
+        // attachment 需在模组初始化期间注册，先唤醒静态初始化
+        BlockVolumeAttachments.registerAll();
+        ServerChunkEvents.CHUNK_LOAD.register(BlockVolumeManager::onChunkLoad);
     }
 
     /**

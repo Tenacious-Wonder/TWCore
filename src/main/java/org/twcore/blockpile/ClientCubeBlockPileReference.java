@@ -14,9 +14,13 @@ import org.twcore.api.blockpile.CubeBlockPileReference;
 import java.util.Objects;
 
 /**
+ * <p><b>已废弃</b>：方块堆系统已被 {@link org.twcore.api.blockvolume.BlockVolume}（方块体）系列取代，
+ * 本类型将在未来版本移除。新代码请迁移到 {@code org.twcore.api.blockvolume} 包。</p>
+ *
  * 客户端方块堆引用实现。
  * 只包含显示所需的信息，不包含实际功能，数据完全从服务器同步
  */
+@Deprecated
 public class ClientCubeBlockPileReference implements CubeBlockPileReference {
     private static final Logger LOGGER = TWCore.LOGGER;
 

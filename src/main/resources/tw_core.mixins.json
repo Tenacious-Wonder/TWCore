@@ -4,8 +4,10 @@
   "package": "org.twcore.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "ChunkRegionMixin",
     "MinecraftDedicatedServerMixin",
-    "ServerPlayerInteractionManagerMixin"
+    "ServerPlayerInteractionManagerMixin",
+    "WorldMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -18,6 +18,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
+ * <p><b>已废弃</b>：方块堆系统已被 {@link org.twcore.api.blockvolume.BlockVolume}（方块体）系列取代，
+ * 本类型将在未来版本移除。新代码请迁移到 {@code org.twcore.api.blockvolume} 包。</p>
+ *
  * 方块堆结构管理器 - 全局的方块堆注册和查找服务
  *
  * <p>该类负责管理世界中所有的方块堆结构实例，提供注册、查找、持久化和生命周期管理功能。
@@ -45,6 +48,7 @@ import java.util.function.Consumer;
  *
  * @see CubeBlockPilePersistentState
  */
+@Deprecated
 public class CubeBlockPileManager {
     private static final Logger LOGGER = TWCore.LOGGER;
 

@@ -22,8 +22,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * <p><b>已废弃</b>：方块堆系统已被 {@link org.twcore.api.blockvolume.BlockVolume}（方块体）系列取代，
+ * 本类型将在未来版本移除。新代码请迁移到 {@code org.twcore.api.blockvolume} 包。</p>
+ *
  * 方块堆数据的持久化存储
  */
+@Deprecated
 public class CubeBlockPilePersistentState extends PersistentState {
     private static final Logger LOGGER = TWCore.LOGGER;
     private static final String PERSISTENT_ID = "cubeBlockPiles";

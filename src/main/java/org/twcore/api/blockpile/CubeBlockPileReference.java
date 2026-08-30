@@ -11,6 +11,9 @@ import org.twcore.blockpile.ClientCubeBlockPileReference;
 import org.twcore.blockpile.ServerCubeBlockPileReference;
 
 /**
+ * <p><b>已废弃</b>：方块堆系统已被 {@link org.twcore.api.blockvolume.BlockVolume}（方块体）系列取代，
+ * 本类型将在未来版本移除。新代码请迁移到 {@code org.twcore.api.blockvolume} 包。</p>
+ *
  * 方块堆引用接口 - 表示单个方块在方块堆结构中的位置信息
  *
  * <p>该接口为方块堆结构中的每个方块提供身份标识，记录方块所属的方块堆结构以及在该结构中的相对位置。
@@ -34,6 +37,7 @@ import org.twcore.blockpile.ServerCubeBlockPileReference;
  * @see ClientCubeBlockPileReference
  * @see CubeBlockPile
  */
+@Deprecated
 public interface CubeBlockPileReference {
     // 序列化键名
     String MASTER_POS_KEY = "MasterPos";
