@@ -89,12 +89,14 @@ public abstract class PlayerAction {
     public abstract void consume(StepExecutionContext<?> context);
 
     /**
-     * 检查两个操作是否匹配。
+     * 检查此操作是否与另一操作匹配，用于<b>配方匹配</b>。
      *
-     * <p>用于配方匹配：检查玩家执行的操作是否与配方要求的操作匹配。</p>
+     * <p>匹配按"满足要求"的语义判断（可能不对称），因此<b>不是</b> {@link Object#equals(Object)}
+     * 的等价关系；本类不重写 equals/hashCode，比较两个操作是否相等时请使用对象身份，
+     * 或由子类自行实现严格值比较。</p>
      *
-     * @param other 要比较的另一个操作
-     * @return 如果两个操作代表相同的动作则返回true
+     * @param other 要匹配的另一操作（通常是配方要求）
+     * @return 如果此操作与其他操作匹配则返回 true
      */
     public abstract boolean matches(PlayerAction other);
 
@@ -133,19 +135,4 @@ public abstract class PlayerAction {
      * @return 操作类型标识符
      */
     public abstract String getType();
-
-    // ==================== 对象方法重写 ====================
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        PlayerAction other = (PlayerAction) obj;
-        return this.matches(other);
-    }
-
-    @Override
-    public int hashCode() {
-        return toString().hashCode();
-    }
 }

@@ -1,6 +1,5 @@
 package org.twcore.process.step;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -63,29 +62,40 @@ public record StepExecutionContext<T>(AbstractProcess<T> process, T blockEntity,
     /**
      * 获取玩家当前手持的物品堆栈。
      *
-     * <p>这是{@code player.getStackInHand(hand)}的快捷方式。</p>
+     * <p>这是{@code player.getStackInHand(hand)}的快捷方式。无玩家参与时（{@link #isNoPlayer()}）
+     * 返回空堆栈。</p>
      *
-     * @return 玩家手持的物品堆栈
+     * @return 玩家手持的物品堆栈，无玩家时返回 {@link ItemStack#EMPTY}
      */
     public ItemStack getHeldItemStack() {
+        if (player == null || hand == null) {
+            return ItemStack.EMPTY;
+        }
         return player.getStackInHand(hand);
     }
 
     /**
      * 检查交互的玩家是否为创造模式。
      *
-     * @return 玩家是否为创造模式
+     * <p>无玩家参与时（{@link #isNoPlayer()}）返回 false。</p>
+     *
+     * @return 玩家是否为创造模式，无玩家时返回 false
      */
     public boolean isCreateMode() {
-        return player.isCreative();
+        return player != null && player.isCreative();
     }
 
     /**
      * 将物品堆栈给予给玩家。
      *
+     * <p>无玩家参与时（{@link #isNoPlayer()}）不执行任何操作。</p>
+     *
      * @param stack 要给予的物品
      */
     public void giveStack(ItemStack stack) {
+        if (player == null) {
+            return;
+        }
         if (!player.giveItemStack(stack)) {
             player.dropItem(stack, false);
         }

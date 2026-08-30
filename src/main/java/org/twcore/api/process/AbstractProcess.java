@@ -84,6 +84,9 @@ public abstract class AbstractProcess<T> {
      * @param step 步骤实例
      */
     protected void registerStep(String stepId, Step<T> step) {
+        if (steps.containsKey(stepId)) {
+            throw new IllegalArgumentException("The step is already registered: " + stepId);
+        }
         steps.put(stepId, step);
     }
 
@@ -138,6 +141,9 @@ public abstract class AbstractProcess<T> {
 
         // 执行步骤
         StepResult result = currentStep.execute(context);
+        if (result == null) {
+            throw new IllegalStateException("The step returned a null result: " + currentStepId);
+        }
 
         // 处理步骤结果
         handleStepResult(result, stepBeforeExecution);
@@ -162,11 +168,11 @@ public abstract class AbstractProcess<T> {
      * <p>此方法将流程状态重置为初始状态，并调用{@link #onStart(World, Object)}回调。
      * 通常在玩家第一次与方块交互时调用。</p>
      */
-    public void start(World world, T blockEntit) {
+    public void start(World world, T blockEntity) {
         this.isActive = true;
         this.currentStepId = getInitialStepId();
         this.previousStepId = null;
-        onStart(world, blockEntit);
+        onStart(world, blockEntity);
     }
 
     /**
@@ -236,13 +242,12 @@ public abstract class AbstractProcess<T> {
      * @param result 步骤执行结果
      */
     private void handleStepResult(StepResult result, String executedStepId) {
-        // 在处理步骤结果前，记录当前步骤为上一步
+        // 记录刚刚执行的步骤为上一步
         this.previousStepId = executedStepId;
 
         switch (result.getType()) {
             case CONTINUE_SAME_STEP:
-                // 保持当前步骤不变，用于循环结构
-                // 上一步应该保持不变（因为步骤没变）
+                // 当前步骤保持不变，用于循环结构；上一步仍是刚执行的同一步骤
                 break;
 
             case NEXT_STEP:
@@ -250,35 +255,28 @@ public abstract class AbstractProcess<T> {
                 if (result.getNextStepId() == null || !steps.containsKey(result.getNextStepId())) {
                     throw new IllegalStateException("The next step is not registered: " + result.getNextStepId());
                 }
-
                 this.currentStepId = result.getNextStepId();
-                this.previousStepId = executedStepId;
                 break;
 
             case COMPLETE:
-                // 完成整个流程，重置流程
+                // 完成整个流程，重置流程（reset 会清空 previousStepId）
                 onComplete();
-                reset(); // 重置流程
-                this.previousStepId = null;
+                reset();
                 break;
 
             case FAIL:
-                // 步骤执行失败
+                // 步骤执行失败，回退到指定步骤继续，否则重置流程
                 String fallbackStepId = result.getFallbackStepId();
                 if (fallbackStepId != null) {
-                    // 如果有回退步骤，跳转到回退步骤继续执行
                     this.currentStepId = fallbackStepId;
                 } else {
-                    // 没有回退步骤，重置流程
                     reset();
-                    this.previousStepId = null;
                 }
                 break;
 
             case RESET:
                 // 重置整个流程
                 reset();
-                this.previousStepId = null;
                 break;
         }
     }
@@ -290,7 +288,7 @@ public abstract class AbstractProcess<T> {
      *
      * <p>子类可以在此方法中初始化流程状态数据。</p>
      */
-    protected void onStart(World world, T blockEntit) {}
+    protected void onStart(World world, T blockEntity) {}
 
     /**
      * 当流程完成时调用。
