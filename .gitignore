@@ -31,6 +31,7 @@ bin/
 # fabric
 
 run/
+logs/
 generated/
 
 # java
@@ -39,3 +40,6 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
+# design docs (not committed)
+
+/design-docs/

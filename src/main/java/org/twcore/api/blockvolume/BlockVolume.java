@@ -9,6 +9,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldView;
+import net.minecraft.world.chunk.ChunkStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -232,24 +233,20 @@ public final class BlockVolume {
 		BlockPos start = range.start();
 		BlockPos end = range.end();
 
-		int invalidCount = 0;
 		for (int x = start.getX(); x <= end.getX(); x++) {
 			for (int y = start.getY(); y <= end.getY(); y++) {
 				for (int z = start.getZ(); z <= end.getZ(); z++) {
 					BlockPos checkPos = new BlockPos(x, y, z);
-					if (!world.isChunkLoaded(checkPos.getX() >> 4, checkPos.getZ() >> 4)) {
+					// 未加载区块内的方块不参与检查（读取未加载区块会强制加载它，在区块加载
+					// 等流程中重入加载会造成死锁）；getChunk 的 create=false 不会强制加载
+					if (world.getChunk(checkPos.getX() >> 4, checkPos.getZ() >> 4, ChunkStatus.FULL, false) == null) {
 						continue;
 					}
 					if (world.getBlockState(checkPos).getBlock() != baseBlock) {
-						invalidCount++;
+						return false;
 					}
 				}
 			}
-		}
-
-		if (invalidCount > 0) {
-			LOGGER.warn("BlockVolume at {} has {} invalid blocks out of {}", masterPos(), invalidCount, getVolume());
-			return false;
 		}
 		return true;
 	}

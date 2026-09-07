@@ -28,8 +28,8 @@ import java.util.function.Function;
 public final class BlockVolumeEvents {
 	private static final Logger LOGGER = TWCore.LOGGER;
 
-	/** 最大合并轮数，防止无限循环。 */
-	private static final int MAX_MERGE_ROUNDS = 10;
+	/** 最大合并次数上限，防止异常情况下合并循环不收敛。合并必然使结构数减少，此值仅为防御性上限。 */
+	private static final int MAX_MERGE_ROUNDS = 64;
 
 	private BlockVolumeEvents() {
 	}
@@ -48,7 +48,10 @@ public final class BlockVolumeEvents {
 		}
 		BlockVolume existing = BlockVolumeManager.findBlockVolume(world, pos);
 		if (existing != null) {
-			if (!existing.checkIntegrity(world)) {
+			// 位置仍在结构中：若新方块已非结构方块，结构必然不再完整，直接以真实世界重建；
+			// 反之（例如重新放置同种方块）结构完好，无需全量扫描。
+			// 其它位置的损坏由区块加载校验（onChunkLoad）兜底，避免高频方块变化触发全量扫描。
+			if (newState.getBlock() != existing.baseBlock()) {
 				rebuildAndMerge(world, existing);
 			}
 			return;
@@ -140,11 +143,10 @@ public final class BlockVolumeEvents {
 											MergeReplacer replacer) {
 		BlockVolume current = initial;
 		boolean mergedInThisRound;
-		int roundCount = 0;
+		int mergeCount = 0;
 
 		do {
 			mergedInThisRound = false;
-			roundCount++;
 
 			for (BlockVolume neighbor : adjacentFinder.apply(current)) {
 				if (neighbor.masterPos().equals(current.masterPos())) {
@@ -164,10 +166,11 @@ public final class BlockVolumeEvents {
 
 				current = merged;
 				mergedInThisRound = true;
+				mergeCount++;
 				break;
 			}
 
-			if (roundCount >= MAX_MERGE_ROUNDS) {
+			if (mergeCount >= MAX_MERGE_ROUNDS) {
 				LOGGER.warn("Reached maximum merge rounds for BlockVolume at {}", current.masterPos());
 				break;
 			}
@@ -211,10 +214,20 @@ public final class BlockVolumeEvents {
 					BlockVolume neighbor = BlockVolumeRegistry.findBlockVolume(world, checkPos);
 					if (neighbor != null && !neighbors.contains(neighbor)) {
 						neighbors.add(neighbor);
+						// 该结构已完整覆盖整个扫描面（轴对齐矩形含对角即全覆盖），
+						// 此方向不可能再有其他相邻结构，提前结束扫描
+						if (coversFace(neighbor, faceStart, faceEnd)) {
+							return;
+						}
 					}
 				}
 			}
 		}
+	}
+
+	/** 判断结构范围是否完整覆盖指定的矩形面（轴对齐矩形含对角两点即全覆盖）。 */
+	private static boolean coversFace(BlockVolume volume, BlockPos faceStart, BlockPos faceEnd) {
+		return volume.containsWorldPos(faceStart) && volume.containsWorldPos(faceEnd);
 	}
 
 	// ==================== 内部：世界生成 ====================
@@ -247,6 +260,10 @@ public final class BlockVolumeEvents {
 					BlockVolume neighbor = BlockVolumeManager.findInChunk(chunk, checkPos);
 					if (neighbor != null && !neighbors.contains(neighbor)) {
 						neighbors.add(neighbor);
+						// 该结构已完整覆盖整个扫描面，此方向不可能再有其他相邻结构，提前结束扫描
+						if (coversFace(neighbor, faceStart, faceEnd)) {
+							return;
+						}
 					}
 				}
 			}
