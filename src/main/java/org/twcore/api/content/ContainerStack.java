@@ -9,37 +9,27 @@ import org.twcore.content.Content;
 import java.util.Objects;
 
 /**
- * 容器-内容物系统的<b>核心操作对象</b>。
+ * <h1>容器内容物栈</h1>
  * <p>
  * 一个 {@code ContainerStack} 实例代表对一个具体物品堆栈的完整分析结果，
  * 它绑定了：
  * <ul>
- *     <li>一个 {@link ContainerType 容器类型} – 物品属于哪种容器（碗、瓶等）</li>
- *     <li>一个可选的 {@link Content 内容物} – 容器当前装载了什么（可为 {@code null} 表示空）</li>
- *     <li>原始的 {@link ItemStack} – 被分析的物品堆栈本身</li>
+ *     <li>一个 {@link ContainerType 容器类型} —— 物品属于哪种容器（碗、瓶等）；</li>
+ *     <li>一个可选的 {@link Content 内容物} —— 容器当前装载了什么（{@code null} 表示空）；</li>
+ *     <li>被分析物品堆栈的副本（{@link ItemStack}）—— 构造时复制，与外部原堆栈互不影响。</li>
  * </ul>
  *
  * <h2>核心职责</h2>
  * <p>
- * 在旧设计中，操作一个“容器物品”需要反复调用 {@link ContainerUtil} 中的静态方法，
- * 流程分散且需多次传递同一个物品堆栈。重构后，大部分实例化操作被收拢到 {@code ContainerStack} 中，
- * 使得调用者可以<b>以一个对象为中心完成所有交互</b>。
+ * 容器物品的读写都围绕这个对象展开：分析一次物品堆栈，之后的空否判断、内容物比对与
+ * 替换都在同一个对象上完成，无需反复传递堆栈：
  * </p>
- * <p>
- * 例如，原本需要：
- * <pre>{@code
- * if (ContainerUtil.isEmptyContainer(stack)) { ... }
- * if (ContainerUtil.providesContent(stack, content)) { ... }
- * ItemStack newStack = ContainerUtil.replaceContent(stack, newContent);
- * }</pre>
- * 现在变为：
  * <pre>{@code
  * ContainerStack cs = ContainerUtil.analyze(stack).orElseThrow();
  * if (cs.isEmptyContainer()) { ... }
  * if (cs.providesContent(content)) { ... }
  * ItemStack newStack = cs.replaceContent(newContent);
  * }</pre>
- * </p>
  *
  * <h2>对象来源</h2>
  * <p>
@@ -49,11 +39,9 @@ import java.util.Objects;
  *
  * <h2>不可变性</h2>
  * <p>
- * 本对象本身是不可变的（所有字段均为 final）。但请注意，
- * 原始 {@link ItemStack} 引用被保留，外部如果修改该堆栈，可能会影响此对象内部状态的一致性。
- * 推荐在分析前复制堆栈，或不要长期持有 {@code ContainerStack}。
- * 所有“修改”操作（如 {@link #replaceContent(Content)}）都不会改变本对象，
- * 而是返回新的 {@link ItemStack}。
+ * 本对象本身是不可变的（所有字段均为 final）：构造时会<b>复制</b>传入的物品堆栈，
+ * 因此外部之后对原堆栈的修改不会影响本对象。所有“修改”操作
+ * （如 {@link #replaceContent(Content)}）也都不改变本对象，而是返回新的 {@link ItemStack}。
  * </p>
  *
  * @see ContainerUtil
@@ -62,9 +50,11 @@ import java.util.Objects;
  */
 public record ContainerStack(ContainerType container, @Nullable Content content, ItemStack originalStack) {
     /**
-     * @param container     容器类型，不能为null
-     * @param content       内容物类型，可以为null（空容器）
-     * @param originalStack 原始物品堆栈，不能为null
+     * 构造容器内容物栈，并复制传入的原始堆栈。
+     *
+     * @param container     容器类型，不能为 null
+     * @param content       内容物类型，可以为 null（空容器）
+     * @param originalStack 被分析的物品堆栈，不能为 null；构造时会复制一份保存
      */
     public ContainerStack(@NotNull ContainerType container,
                           @Nullable Content content,
@@ -74,6 +64,9 @@ public record ContainerStack(ContainerType container, @Nullable Content content,
         this.originalStack = originalStack.copy();
     }
 
+    /**
+     * 判断此容器是否为空（没有装载任何内容物）。
+     */
     public boolean isEmpty() {
         return content == null;
     }
@@ -108,8 +101,23 @@ public record ContainerStack(ContainerType container, @Nullable Content content,
     }
 
     /**
+     * 判断另一个容器内容物栈是否与本栈装的是同一种东西。
+     *
+     * <p>只比较<b>容器类型</b>与<b>内容物</b>：两者都相同（含都为空）即为 {@code true}。
+     * 物品的<b>数量与 NBT 数据不参与比较</b>，因此“3 个装水的碗”与“1 个装水的碗”
+     * 在这里算同一种；需要连同数量与 NBT 一起严格比较时，请使用 {@link #equals(Object)}。</p>
+     *
+     * @param other 要比较的另一个容器内容物栈
+     * @return 如果容器类型与内容物都相同则返回 {@code true}
+     */
+    public boolean sameContentsAs(@NotNull ContainerStack other) {
+        Objects.requireNonNull(other);
+        return container.equals(other.container) && Objects.equals(content, other.content);
+    }
+
+    /**
      * 替换此容器中的内容物，返回一个新的 ItemStack。
-     * 不修改原始堆栈。
+     * 不修改本对象持有的堆栈。
      */
     @NotNull
     public ItemStack replaceContent(@Nullable Content newContent) {
@@ -130,15 +138,6 @@ public record ContainerStack(ContainerType container, @Nullable Content content,
     @NotNull
     public ItemStack createEmptyStack(int amount) {
         return container.createEmptyItemStack(amount);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ContainerStack that)) return false;
-        return container.equals(that.container) &&
-                Objects.equals(content, that.content) &&
-                ItemStack.areItemsEqual(originalStack, that.originalStack);
     }
 
     @Override
