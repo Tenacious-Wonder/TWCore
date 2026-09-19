@@ -7,8 +7,8 @@
   "authors": ["Tenacious Wonder"],
   "contact": {
     "homepage": "https://modrinth.com/mod/tw-core",
-    "sources": "https://github.com/666daji/TWCore",
-    "issues": "https://github.com/666daji/TWCore/issues"
+    "sources": "https://github.com/Tenacious-Wonder/TWCore",
+    "issues": "https://github.com/Tenacious-Wonder/TWCore/issues"
   },
   "license": "MIT",
   "icon": "assets/tw_core/icon.png",

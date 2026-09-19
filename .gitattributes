@@ -1,0 +1,4 @@
+# Gradle wrapper 脚本在 Linux / CI 上必须以 LF 检出，否则 ./gradlew 会以 sh\r 失败
+gradlew text eol=lf
+gradlew.bat text eol=crlf
+*.jar binary

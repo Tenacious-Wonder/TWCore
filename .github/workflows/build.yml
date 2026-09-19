@@ -1,0 +1,67 @@
+name: build
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write          # 建 GitHub Release 必需
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - name: validate gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+      - name: setup jdk
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'microsoft'
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+      - name: build
+        run: ./gradlew build
+      - name: capture build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Artifacts
+          path: build/libs/
+      - name: read mod version
+        id: props
+        run: |
+          echo "mod_version=$(grep -m1 '^mod_version=' gradle.properties | cut -d'=' -f2 | tr -d '\r')" >> "$GITHUB_OUTPUT"
+          echo "minecraft_version=$(grep -m1 '^minecraft_version=' gradle.properties | cut -d'=' -f2 | tr -d '\r')" >> "$GITHUB_OUTPUT"
+      - name: extract changelog of the current version
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        run: awk '/^## /{c++} c==1 && /^---[[:space:]]*$/{exit} c==1' CHANGELOG.md > build/changelog.md
+      - name: publish
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        uses: Kira-NT/mc-publish@v3
+        with:
+          modrinth-id: tw-core
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+
+          curseforge-id: 1573108
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          # CurseForge 的一条文件记录只能装一个 jar，因此只发布主 jar（不含 sources）
+          curseforge-files: 'build/libs/!(*-@(dev|sources|javadoc)).jar'
+
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+          # 由 tag 触发时沿用该 tag；手动触发时新建 "v<mod_version>" 作为 tag
+          github-tag: "${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', steps.props.outputs.mod_version) }}"
+          # 手动触发时以所选运行分支为准，避免 tag/Release 落到默认分支
+          github-commitish: ${{ github.ref_name }}
+
+          name: "TW's Core ${{ steps.props.outputs.mod_version }}"
+          version: ${{ steps.props.outputs.mod_version }}
+          version-type: release
+
+          loaders: fabric
+          environment: client | server
+          game-versions: ${{ steps.props.outputs.minecraft_version }}
+
+          changelog-file: build/changelog.md
