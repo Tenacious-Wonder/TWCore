@@ -15,8 +15,8 @@ import org.twcore.registry.ContainerTypes;
 import org.twcore.registry.RegistryInit;
 
 public class TWCore implements ModInitializer {
-    public static String MOD_ID = "tw_core";
-    public static Logger LOGGER = LoggerFactory.getLogger("TW's Core");
+    public static final String MOD_ID = "tw_core";
+    public static final Logger LOGGER = LoggerFactory.getLogger("TW's Core");
 
     @Override
     public void onInitialize() {
@@ -28,11 +28,11 @@ public class TWCore implements ModInitializer {
         blockVolumeInit();
         registerDefaultAction();
 
-        LOGGER.info("TW`s Core is initializing!");
+        LOGGER.info("TW's Core is initializing!");
     }
 
     /**
-     * TW`s Core对自己注册。
+     * TW's Core 对自己注册。
      *
      * @see TwModManager
      */
