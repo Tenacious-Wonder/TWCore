@@ -45,7 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @since 1.0.3
  * @see BlockVolume
- * @see org.twcore.blockvolume.BlockVolumeManager
+ * @see BlockVolumeManager
  */
 public final class BlockVolumeRegistry {
 	private static final Set<Block> REGISTERED = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -73,6 +73,7 @@ public final class BlockVolumeRegistry {
 	/**
 	 * 注册参与方块体系统的方块。重复注册无副作用。
 	 *
+	 * @param blocks 要注册的方块，允许一次传入多个
 	 * @since 1.0.3
 	 */
 	public static void register(Block... blocks) {

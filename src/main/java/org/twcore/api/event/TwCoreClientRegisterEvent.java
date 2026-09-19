@@ -14,7 +14,7 @@ import org.twcore.api.TwCoreClientRegistrar;
  * <p>
  * 子模组通过 {@link #TW_CORE_CLIENT_REGISTRAR} 注册一个回调
  * （实现 {@link TwCoreClientRegistrar} 接口）。Core 在所有回调
- * 执行完毕后调用 {@code ConfigManager.loadClient()} 加载客户端配置。
+ * 执行完毕后统一加载客户端配置。
  * </p>
  *
  * <h2>典型用法</h2>

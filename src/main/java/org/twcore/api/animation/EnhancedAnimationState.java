@@ -5,17 +5,14 @@ import net.minecraft.util.math.MathHelper;
 import java.util.function.Consumer;
 
 /**
- * 客户端动画状态管理器。
- * <p>
- * 核心功能：
- * <ul>
- *   <li>基于游戏刻的动画时间追踪（1 tick = 50 ms）</li>
- *   <li>支持停止并保留进度 / 从保留进度恢复</li>
- *   <li>提供完全重置方法 {@link #reset()}</li>
- *   <li>记录是否曾启动过 {@link #hasProcess()}</li>
- * </ul>
- * </p>
- * 区分于{@link net.minecraft.entity.AnimationState}
+ * 客户端动画计时器：以毫秒追踪一段动画已播放的时长，支持暂停保留进度、从进度继续与倒放。
+ *
+ * <p>原版 {@link net.minecraft.entity.AnimationState} 只记录动画起点，无法在暂停后保留进度，
+ * 也不能倒放，本类在它之上补足这些能力。时长基于游戏刻计算（1 tick = 50 ms），可叠加速度倍率；
+ * {@link #stopAndKeepProgress()} 与 {@link #startFromSavedProgress(int)} 成对使用即可实现
+ * “暂停—继续”。</p>
+ *
+ * @see net.minecraft.entity.AnimationState
  */
 public class EnhancedAnimationState {
     private static final long STOPPED = Long.MAX_VALUE;
@@ -31,11 +28,12 @@ public class EnhancedAnimationState {
     // 元数据
     private boolean everStarted = false; // 是否曾经启动过
 
-    // 倒放标记
+    /** 是否倒放：为 {@code true} 时 {@link #update(float, float)} 递减已运行时长，减到 0 即自动停止。 */
     public boolean reversed = false;
 
     /**
      * 从头开始动画，清除所有保存的进度。
+     *
      * @param age 当前实体年龄（刻）
      */
     public void start(int age) {
@@ -48,6 +46,7 @@ public class EnhancedAnimationState {
 
     /**
      * 从上次保存的进度恢复动画（如果存在保存进度），否则等同于 start。
+     *
      * @param age 当前实体年龄（刻）
      */
     public void startFromSavedProgress(int age) {
@@ -61,6 +60,11 @@ public class EnhancedAnimationState {
         }
     }
 
+    /**
+     * 在动画未运行时启动它：有保存进度则从中断处继续，否则从头开始。
+     *
+     * @param age 当前实体年龄（刻）
+     */
     public void startIfNotRunning(int age) {
         if (!this.isRunning()) {
             this.startFromSavedProgress(age);
@@ -94,7 +98,8 @@ public class EnhancedAnimationState {
 
     /**
      * 更新动画计时器。
-     * @param progress 当前连续刻数（通常为 entity.age + tickDelta）
+     *
+     * @param progress        当前连续刻数（通常为 entity.age + tickDelta）
      * @param speedMultiplier 速度倍率
      */
     public void update(float progress, float speedMultiplier) {

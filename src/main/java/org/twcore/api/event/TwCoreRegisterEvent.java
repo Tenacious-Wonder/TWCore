@@ -15,7 +15,7 @@ import org.twcore.api.TwCoreRegistrar;
  * 子模组通过 {@link #TW_CORE_REGISTRAR} 注册一个回调（实现
  * {@link TwCoreRegistrar} 接口），在该回调中集中完成模组注册、
  * 配置注册、影响器提交等操作。Core 会在所有回调执行完毕后
- * 调用 {@code ConfigManager.loadCommon()} 加载双端配置。
+ * 统一加载双端配置。
  * </p>
  *
  * <h2>典型用法</h2>
@@ -30,7 +30,7 @@ import org.twcore.api.TwCoreRegistrar;
  * @see TwCoreRegistrar
  */
 public class TwCoreRegisterEvent {
-     public static final Event<TwCoreRegistrar> TW_CORE_REGISTRAR = EventFactory.createArrayBacked(TwCoreRegistrar.class, callbacks -> () -> {
+    public static final Event<TwCoreRegistrar> TW_CORE_REGISTRAR = EventFactory.createArrayBacked(TwCoreRegistrar.class, callbacks -> () -> {
         for (TwCoreRegistrar callback : callbacks) {
             callback.register();
         }

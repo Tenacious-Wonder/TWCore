@@ -11,16 +11,15 @@ import java.util.*;
 import java.util.function.Function;
 
 /**
- * 从物品获取对应方块声音组 ({@link BlockSoundGroup}) 的工具类。
+ * 从物品获取对应方块声音组的工具类。
  *
- * <h3>设计目的</h3>
+ * <h2>设计目的</h2>
  * <p>
  * 提供灵活的扩展机制，允许任何物品（不限于 {@link BlockItem}）映射或解析出对应的方块声音组，
- * 用于播放放置/破坏等音效。原有逻辑只能通过方块物品获得声音，现在可以通过映射和自定义解析器
- * 支持所有物品类型。
+ * 用于播放放置、破坏等音效：既能给普通物品直接绑定声音组，也能通过自定义解析器按条件推断。
  * </p>
  *
- * <h3>声音组解析优先级</h3>
+ * <h2>声音组解析优先级</h2>
  * <ol>
  *     <li><b>显式映射</b>（最高优先级）：通过 {@link #registerMapping(Item, BlockSoundGroup)} 手动绑定的映射。</li>
  *     <li><b>自定义解析器链</b>：按注册顺序依次尝试，返回第一个非 {@code null} 的结果。</li>
@@ -28,7 +27,7 @@ import java.util.function.Function;
  *     <li><b>最终兜底</b>：若以上步骤均未获取到，返回 {@link BlockSoundGroup#STONE}。</li>
  * </ol>
  *
- * <h3>使用方法</h3>
+ * <h2>使用方法</h2>
  * <pre>{@code
  * // 注册特定物品到声音组的映射（最高优先级）
  * Item2BlockSounds.registerMapping(Items.STICK, BlockSoundGroup.WOOD);
@@ -136,7 +135,7 @@ public final class Item2BlockSounds {
      * <p>
      * 查找优先级：
      * <ol>
-     *     <li>显式映射 ({@link #EXPLICIT_MAPPINGS})</li>
+     *     <li>显式映射</li>
      *     <li>自定义解析器链（按注册顺序）</li>
      *     <li>内置 BlockItem 解析器（如果物品是方块物品）</li>
      *     <li>返回 {@link BlockSoundGroup#STONE} 作为兜底</li>

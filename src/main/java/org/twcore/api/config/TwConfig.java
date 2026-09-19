@@ -34,9 +34,8 @@ import java.util.function.Function;
  * <p>
  * 通过 {@link #addDefaultOverride(String, String, Object)}
  * 方法，模组可以为其他模组的配置添加影响器。注册阶段仅收集数据，
- * 不检查目标是否存在。所有检查与合并将在配置最终加载时由
- * {@link ConfigManager} 统一执行。无法匹配到已注册配置的影响器
- * 会被静默丢弃，不会产生任何日志或异常。
+ * 不检查目标是否存在；所有检查与合并都推迟到配置最终加载时统一执行。
+ * 无法匹配到已注册配置的影响器会被静默丢弃，不会产生任何日志或异常。
  * </p>
  *
  * <h2>典型用法</h2>
@@ -67,7 +66,7 @@ import java.util.function.Function;
  *     ConfigInfluencer.create("my_mod", 2, new ExtraOre("ruby")));
  * }</pre>
  *
- * @see ConfigManager
+ * @see TwModManager
  * @see ConfigType
  * @see ConfigInfluencer
  */
@@ -109,7 +108,7 @@ public final class TwConfig {
      * 与 {@link #get(String, String)} 的宽松语义不同，本方法要求配置<b>必然</b>
      * 可被读取。{@link ConfigType} 携带了完整注册元信息，因此本方法会校验该配置
      * 类型是否已注册并<b>保证返回非空数据</b>：未注册、或已注册但尚未加载
-     * （见 {@link ConfigManager#loadCommon()} 与 {@link ConfigManager#loadClient()}）
+     * （双端配置在通用注册完成后加载，客户端配置要到客户端注册完成后才加载）
      * 都会抛出异常，而不是静默返回 {@code null}。这能及早暴露配置注册遗漏或
      * 加载时序错误，避免调用方在错误时机拿到空数据。
      * </p>
@@ -145,7 +144,7 @@ public final class TwConfig {
     /**
      * 获取指定模组的配置构造器。
      *
-     * @param modId 模组 ID，必须已通过 {@link TwModManager} 注册
+     * @param modId 模组 ID，必须已通过 {@link TwModManager#register(String, int)} 注册
      * @return 该模组的配置构造器
      * @throws IllegalStateException 如果指定模组尚未在 {@link TwModManager} 中注册
      */
@@ -161,7 +160,7 @@ public final class TwConfig {
 
     /**
      * 注册一个双端通用配置。
-     * 配置将在通用注册完成后由 {@link ConfigManager#loadCommon()} 加载。
+     * 配置将在通用注册完成后统一加载。
      *
      * @param type 配置元信息，其 {@code side} 必须为 {@link ConfigInfluencer.ConfigSide#COMMON}
      * @param <T>  配置数据类型
@@ -179,7 +178,7 @@ public final class TwConfig {
 
     /**
      * 注册一个客户端专属配置。
-     * 仅在物理客户端生效，将由 {@link ConfigManager#loadClient()} 加载。
+     * 仅在物理客户端生效，将在客户端注册完成后统一加载。
      * <p>此方法应在 {@link TwCoreClientRegistrar#registerClient()} 中调用。</p>
      *
      * @param type 配置元信息，其 {@code side} 必须为 {@link ConfigInfluencer.ConfigSide#CLIENT}
@@ -200,7 +199,7 @@ public final class TwConfig {
      * 为目标配置添加一个默认值影响器。
      * <p>
      * 传入任意类型的 payload 数据，本方法会自动封装来源模组信息
-     * （当前 {@code modId} 及从 {@link TwModManager} 获取的版本等级）
+     * （当前 {@code modId} 及从 {@link TwModManager} 获取的 API 等级）
      * 为一个 {@link ConfigInfluencer} 并提交。
      * </p>
      * <p>

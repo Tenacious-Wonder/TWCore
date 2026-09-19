@@ -21,34 +21,62 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 
 /**
- * 可放置物品的方块基类，提供统一的物品放置和取出交互机制。
+ * <h1>可放置物品的方块</h1>
  * <p>
- * 该方块通过与实现{@link Inventory}接口的方块实体配合，允许玩家在方块上放置和取出物品。
- * 支持自定义放置和取出条件、音效以及物品的视觉表现。
+ * 有些方块的主要用途就是“托着一件物品”——盘子里的一份菜、砧板上的一块肉、架子上的一个瓶子。
+ * 本类是这类方块的基类：它与 {@link UpPlaceBlockEntity} 配合，把“手持物品右键放上去、
+ * 再右键取下来”这套交互统一实现好，子类只需声明允许放置与取出的条件。
+ * </p>
+ *
+ * <h2>交互流程</h2>
+ * <p>玩家右键方块时按以下顺序尝试：</p>
+ * <ol>
+ *     <li>若 {@link #canFetched(UpPlaceBlockEntity, ItemStack)} 允许，先尝试<b>取出</b>方块上的物品；</li>
+ *     <li>否则若 {@link #canPlace(UpPlaceBlockEntity, ItemStack)} 允许，尝试<b>放置</b>手中的物品；</li>
+ *     <li>两者都不成立时返回 {@link ActionResult#FAIL}，交由其他逻辑处理。</li>
+ * </ol>
+ *
+ * <h2>子类需要实现的契约</h2>
+ * <ul>
+ *     <li>{@link #getBaseShape} —— 方块本身的轮廓形状，方块上有物品时系统会自动并入物品形状；</li>
+ *     <li>{@link #canFetched} —— 取出条件；</li>
+ *     <li>{@link #canPlace} —— 放置条件。</li>
+ * </ul>
+ * <p>
+ * 音效由构造器传入的 {@link UpSounds} 决定：默认动态音效会按物品材质挑选声音，
+ * 也可以设为固定音效或完全静音。方块被破坏时，方块实体中的物品会自动掉落。
  * </p>
  *
  * @see UpPlaceBlockEntity
+ * @see UpSounds
  */
 public abstract class UpPlaceBlock extends BlockWithEntity {
-    /**
-     * 方块交互音效配置
-     */
+
+    /** 放置与取出物品时使用的音效配置，由构造器指定。 */
     public final UpSounds upSounds;
 
+    /**
+     * 创建方块，并指定交互音效。
+     *
+     * @param settings 方块设置
+     * @param upSounds 放置与取出时使用的音效配置
+     */
     public UpPlaceBlock(Settings settings, UpSounds upSounds) {
         super(settings);
         this.upSounds = upSounds;
     }
 
+    /**
+     * 创建方块，使用默认的动态物品音效（{@link UpSounds#DYNAMIC}）。
+     *
+     * @param settings 方块设置
+     */
     public UpPlaceBlock(Settings settings) {
         this(settings, UpSounds.DYNAMIC);
     }
 
     /**
-     * 当方块被替换或破坏时，将方块实体中的库存物品掉落出来
-     * <p>
-     * 确保方块被破坏时不会丢失其中的物品。
-     * </p>
+     * 方块被替换或破坏时，把方块实体库存中的物品掉落出来，避免物品凭空消失。
      */
     @Override
     public void onStateReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean moved) {
@@ -63,11 +91,9 @@ public abstract class UpPlaceBlock extends BlockWithEntity {
     }
 
     /**
-     * 获取方块的轮廓形状，合并基础形状与容器中物品的形状
-     * <p>
-     * 当方块实体中有物品时，轮廓形状会是基础形状和物品形状的并集，
-     * 这样可以正确显示物品在方块上的视觉表现。
-     * </p>
+     * 获取方块的轮廓形状：基础形状与方块上物品形状的并集。
+     *
+     * <p>这样放置上去的物品才能正确参与碰撞与选中轮廓。</p>
      */
     @Override
     public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
@@ -82,19 +108,25 @@ public abstract class UpPlaceBlock extends BlockWithEntity {
     }
 
     /**
-     * 获取方块的基准轮廓形状
-     * <p>
-     * 子类必须实现此方法来定义方块本身的基本碰撞体积。
-     * </p>
+     * 获取方块的基准轮廓形状。
      *
-     * @param state 当前方块状态
-     * @param world 方块所在的世界
-     * @param pos 方块位置
+     * <p>子类必须实现此方法来定义方块本身的基本形状，物品形状会在此基础上叠加。</p>
+     *
+     * @param state   当前方块状态
+     * @param world   方块所在的世界
+     * @param pos     方块位置
      * @param context 形状计算上下文
      * @return 方块的基准轮廓形状
      */
     public abstract VoxelShape getBaseShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context);
 
+    /**
+     * 处理玩家右键交互：先尝试取出方块上的物品，再尝试把手中物品放上去。
+     *
+     * <p>取出与放置能否进行分别由 {@link #canFetched(UpPlaceBlockEntity, ItemStack)} 与
+     * {@link #canPlace(UpPlaceBlockEntity, ItemStack)} 判定；两者都不可行时返回
+     * {@link ActionResult#FAIL}。</p>
+     */
     @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         ItemStack handStack = player.getStackInHand(hand);
@@ -124,28 +156,26 @@ public abstract class UpPlaceBlock extends BlockWithEntity {
     }
 
     /**
-     * 检查当前条件下是否可以执行取出操作
-     * <p>
-     * 子类必须实现此方法来确定取出操作的触发条件，
-     * 例如：手中是否持有特定工具、方块中是否有物品等。
-     * </p>
+     * 检查当前条件下是否可以执行取出操作。
+     *
+     * <p>子类必须实现此方法来确定取出操作的触发条件，例如手中是否持有特定工具、
+     * 方块上是否有物品等。</p>
      *
      * @param blockEntity 目标方块实体
-     * @param handStack 玩家手中的物品堆栈
-     * @return 如果可以取出物品返回true，否则返回false
+     * @param handStack   玩家手中的物品堆栈
+     * @return 如果可以取出物品则返回 true
      */
     public abstract boolean canFetched(UpPlaceBlockEntity blockEntity, ItemStack handStack);
 
     /**
-     * 检查当前条件下是否可以执行放置操作
-     * <p>
-     * 子类必须实现此方法来确定放置操作的触发条件，
-     * 例如：手中物品是否有效、方块是否有空位等。
-     * </p>
+     * 检查当前条件下是否可以执行放置操作。
+     *
+     * <p>子类必须实现此方法来确定放置操作的触发条件，例如手中物品是否有效、
+     * 方块上是否还有空位等。</p>
      *
      * @param blockEntity 目标方块实体
-     * @param handStack 玩家手中的物品堆栈
-     * @return 如果可以放置物品返回true，否则返回false
+     * @param handStack   玩家手中的物品堆栈
+     * @return 如果可以放置物品则返回 true
      */
     public abstract boolean canPlace(UpPlaceBlockEntity blockEntity, ItemStack handStack);
 
@@ -165,7 +195,7 @@ public abstract class UpPlaceBlock extends BlockWithEntity {
      */
     public record UpSounds(SoundEvent placeSound, SoundEvent fetchSound) {
 
-        /** 空音效：不播放任何声音 */
+        /** 空音效：不播放任何声音。 */
         public static final UpSounds EMPTY = new UpSounds(null, null);
 
         /**
@@ -183,7 +213,7 @@ public abstract class UpPlaceBlock extends BlockWithEntity {
          *
          * @param world        当前世界
          * @param pos          播放位置
-         * @param isPlaceSound true 播放放置音效，false 播放取出音效
+         * @param isPlaceSound {@code true} 播放放置音效，{@code false} 播放取出音效
          */
         public void playSound(World world, BlockPos pos, boolean isPlaceSound) {
             if (isPlaceSound) {
@@ -193,14 +223,14 @@ public abstract class UpPlaceBlock extends BlockWithEntity {
             }
         }
 
-        /** 播放放置固定音效（服务端，音效非空时） */
+        /** 播放放置固定音效（服务端，音效非空时）。 */
         public void playPlaceSound(World world, BlockPos pos) {
             if (placeSound != null && !world.isClient) {
                 world.playSound(null, pos, placeSound, SoundCategory.BLOCKS, 1.0F, 1.0F);
             }
         }
 
-        /** 播放取出固定音效（服务端，音效非空时） */
+        /** 播放取出固定音效（服务端，音效非空时）。 */
         public void playFetchSound(World world, BlockPos pos) {
             if (fetchSound != null && !world.isClient) {
                 world.playSound(null, pos, fetchSound, SoundCategory.BLOCKS, 1.0F, 1.0F);

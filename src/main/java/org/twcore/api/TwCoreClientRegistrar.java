@@ -27,7 +27,7 @@ import org.twcore.api.event.TwCoreClientRegisterEvent;
  * <p>
  * Core 保证在所有双端通用注册（{@link TwCoreRegistrar#register()}）
  * <b>全部执行完毕之后</b>，才会在物理客户端调用本接口的方法。
- * 因此，在 {@code registerClient()} 内可以安全地通过
+ * 因此，在 {@link #registerClient()} 内可以安全地通过
  * {@link TwModManager} 查询其他模组的注册状态和版本等级。
  * </p>
  *

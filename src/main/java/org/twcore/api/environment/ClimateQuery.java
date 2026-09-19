@@ -5,20 +5,37 @@ import net.minecraft.world.World;
 import org.twcore.environment.ClimateQueryImpl;
 
 /**
- * 环境查询工具类（API）。
+ * <h1>环境查询</h1>
  * <p>
- * 提供静态方法查询基于世界生成的动态温度（℃）与湿度（%），
- * 以及底层的原始噪声值。
+ * 方块与环境机制常常需要知道“这里有多热、多湿”——作物能否生长、食物如何变质、
+ * 积雪是否融化，都取决于当地的气候。本类提供查询<b>基于世界生成的动态温度（℃）
+ * 与湿度（%）</b>的静态入口，以及供自定义计算使用的底层原始噪声值。
+ * </p>
+ *
+ * <h2>数值来源</h2>
  * <p>
- * 温度与湿度计算综合了以下因素：
+ * 温度与湿度综合了以下因素：
+ * </p>
  * <ul>
- *   <li>世界生成噪声（温度与植被噪声）</li>
- *   <li>季节波动（使用 {@link TimePoint} 获取季节相位）</li>
- *   <li>高度衰减（海拔越高温度越低、越干燥）</li>
+ *     <li>世界生成噪声（温度与植被噪声）；</li>
+ *     <li>季节波动（使用 {@link TimePoint} 获取季节相位）；</li>
+ *     <li>高度衰减（海拔越高温度越低、越干燥）。</li>
  * </ul>
- * 所有逻辑委托给 {@link ClimateQueryImpl} 实现。
+ *
+ * <h2>接入方式</h2>
+ * <p>
+ * 直接在服务端逻辑中调用静态方法即可，无需注册或初始化：
+ * </p>
+ * <pre>{@code
+ * float temperature = ClimateQuery.getTemperature(world, pos);
+ * float humidity = ClimateQuery.getHumidity(world, pos);
+ * }</pre>
+ * <p>
+ * 客户端调用一律返回中性值（温度 0.0、湿度 50.0），因此气候判定应放在服务端进行。
+ * </p>
  *
  * @since 1.0.3
+ * @see TimePoint
  */
 public class ClimateQuery {
 

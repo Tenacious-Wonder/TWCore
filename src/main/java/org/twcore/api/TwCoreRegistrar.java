@@ -82,7 +82,7 @@ import org.twcore.api.config.ConfigType;
  *
  * <h2>关于跨模组信息访问的重要约定</h2>
  * <p>
- * 尽管在客户端注册阶段（{@code TwCoreClientRegistrar}）可以安全访问
+ * 尽管在客户端注册阶段（{@link TwCoreClientRegistrar}）可以安全访问
  * {@link TwModManager} 中其他模组的注册信息（因为其时序在所有双端注册之后），
  * 但为了保持框架的<b>一致性</b>，<b>强烈建议在任何注册逻辑中都不要依赖其他模组
  * 是否已经注册</b>。

@@ -14,28 +14,56 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 抽象流程基类，定义了多步骤交互流程的基本结构。
+ * <h1>多步骤交互流程</h1>
  * <p>
- * <strong>设计理念：</strong>
- * 流程系统将复杂的方块交互逻辑分解为独立的、可重用的步骤单元。
- * 每个流程实例可以独立管理其状态和执行逻辑，而不同的方块实体类型可以持有相同的流程实例。
+ * 许多方块交互并不在一次点击内结束——腌制、揉捏、用餐都需要玩家分阶段参与、
+ * 随时间推进。本类把这类交互组织成一条<b>按序推进的流程</b>：流程由一组带唯一
+ * ID 的步骤组成，从起始步骤开始，每执行一步都会产生一个去向结果，流程据此前行、
+ * 循环或终止；当前推进到哪一步由流程实例自行记忆，因此一次流程可以跨越多次交互、
+ * 多个 tick 持续进行，进度还能随方块实体写入 NBT，在重进世界后继续。
  * </p>
  * <p>
- * <strong>核心特点：</strong>
- * <ol>
- * <li><strong>解耦设计</strong>：流程不绑定特定方块实体类型，只通过泛型约束可操作的类型</li>
- * <li><strong>可重用性</strong>：同一流程可以被不同类型的方块实体持有和使用</li>
- * <li><strong>状态管理</strong>：流程实例管理自身的所有状态数据</li>
- * <li><strong>灵活组合</strong>：通过步骤构建器可以灵活组合各种类型的步骤 </li>
- * </ol>
- * </p>
- * <p>
- * <strong>使用模式：</strong>
- * 方块实体持有流程实例作为字段，通过流程实例管理复杂的交互逻辑。
- * 当玩家与方块交互时，方块实体将交互委托给流程实例执行。
+ * 本类是定义这种流程的<b>基类</b>，不绑定任何特定方块实体：子类声明自己的步骤
+ * 与初始步骤，方块实体持有流程实例，并把玩家的交互与方块 tick 委托给它。
  * </p>
  *
- * <h3>使用示例：</h3>
+ * <h2>核心概念</h2>
+ * <ul>
+ *     <li><b>步骤</b>（{@link Step}）：流程的最小执行单元，由唯一 ID 标识；
+ *         步骤声明自己适用于哪些方块实体，并处理该步的一次交互。</li>
+ *     <li><b>流程状态</b>：流程记忆当前步骤、上一步骤与活动标记；
+ *         该状态可写入 NBT，让进度随方块实体保存与恢复。</li>
+ *     <li><b>执行上下文</b>（{@link StepExecutionContext}）：一次执行的现场快照，
+ *         包含方块实体、方块状态、世界、位置、玩家、手与命中信息。</li>
+ *     <li><b>执行结果</b>（{@link StepResult}）：步骤执行后给出的去向指令——
+ *         继续当前步骤、进入下一步、完成流程、失败回退或整体重置。</li>
+ * </ul>
+ *
+ * <h2>生命周期</h2>
+ * <ol>
+ *     <li><b>开始</b>：调用 {@link #start(World, Object)} 启动流程，流程进入
+ *         活动状态，落在初始步骤上；</li>
+ *     <li><b>推进</b>：玩家交互或方块 tick 调用 {@code executeStep(...)}，流程
+ *         执行当前步骤，并按步骤给出的执行结果转移；</li>
+ *     <li><b>完成或失败</b>：步骤宣告完成时，流程执行完成回调并自动重置回初始
+ *         状态；失败则回退到指定步骤继续，或同样整体重置；</li>
+ *     <li><b>复用</b>：重置后的流程可以再次 {@link #start(World, Object)}，
+ *         同一个流程实例可反复承载多次交互。</li>
+ * </ol>
+ *
+ * <h2>定义流程子类</h2>
+ * <p>继承本类即获得上述完整机制，子类需要做三件事：</p>
+ * <ol>
+ *     <li>实现抽象方法 {@link #getInitialStepId()}，返回流程的起始步骤 ID；</li>
+ *     <li>在构造函数中通过 {@link #registerStep(String, Step)} 注册全部步骤；</li>
+ *     <li>按需重写钩子：生命周期钩子
+ *         （{@link #onStart(World, Object)}、{@link #onComplete()}、
+ *         {@link #onReset()}、{@link #beforeGetStep(StepExecutionContext)}）
+ *         与状态展示钩子（{@link #shouldShowStepList()}、{@link #getCustomStatusInfo()}）。</li>
+ * </ol>
+ *
+ * <h2>使用示例</h2>
+ * <p>方块实体持有流程实例，并把玩家交互委托给流程执行：</p>
  * <pre>{@code
  * public class MyBlockEntity extends BlockEntity {
  *     // 方块实体持有流程实例
@@ -53,7 +81,7 @@ import java.util.Map;
  * }
  * }</pre>
  *
- * @param <T> 流程支持的操作类型。子类定义泛型时，如果流程足够通用，则尽量不要绑定特定的方块实体。
+ * @param <T> 流程支持的操作类型。若流程足够通用，则尽量不绑定特定方块实体
  * @see Step
  * @see StepExecutionContext
  * @see StepResult
@@ -152,8 +180,10 @@ public abstract class AbstractProcess<T> {
     }
 
     /**
-     * 无玩家参与的情况下执行步骤。
-     * <p>这样流程的推进就可以在方块的tick方法或者一些奇怪的地方进行了。</p>
+     * 无玩家参与的情况下执行当前步骤。
+     *
+     * <p>用于让流程的推进发生在方块 tick 等非交互场合：此时没有玩家、手与命中信息，
+     * 步骤只会拿到方块实体与世界位置。内部转发到带玩家的重载版本，玩家相关参数为 {@code null}。</p>
      *
      * @return 交互结果
      * @see #executeStep(Object, BlockState, World, BlockPos, PlayerEntity, Hand, BlockHitResult)
@@ -208,18 +238,18 @@ public abstract class AbstractProcess<T> {
     // ============ 状态查询方法 ============
 
     /**
-     * 获取当前步骤ID。
+     * 获取当前步骤 ID。
      *
-     * @return 当前步骤ID，如果未设置则返回null
+     * @return 当前步骤 ID；如果尚未设置则返回 {@code null}
      */
     public String getCurrentStepId() {
         return currentStepId;
     }
 
     /**
-     * 获取上一步骤ID。
+     * 获取上一步骤 ID。
      *
-     * @return 上一步骤ID，如果未设置则返回null
+     * @return 上一步骤 ID；如果尚未设置则返回 {@code null}
      */
     public String getPreviousStepId() {
         return previousStepId;
@@ -228,7 +258,7 @@ public abstract class AbstractProcess<T> {
     /**
      * 检查流程是否处于活动状态。
      *
-     * @return 如果流程已开始且未完成/失败，则返回true
+     * @return 如果流程已开始且未完成或失败，则返回 {@code true}
      */
     public boolean isActive() {
         return isActive;
@@ -239,7 +269,8 @@ public abstract class AbstractProcess<T> {
     /**
      * 处理步骤执行结果，根据结果类型更新流程状态。
      *
-     * @param result 步骤执行结果
+     * @param result         步骤执行结果
+     * @param executedStepId 刚刚执行完毕的步骤 ID，将被记为上一步骤
      */
     private void handleStepResult(StepResult result, String executedStepId) {
         // 记录刚刚执行的步骤为上一步
@@ -306,29 +337,30 @@ public abstract class AbstractProcess<T> {
     protected void onReset() {}
 
     /**
-     * 获取初始步骤ID。
+     * 获取初始步骤 ID。
      *
-     * <p>子类必须实现此方法，返回流程的初始步骤ID。</p>
+     * <p>子类必须实现此方法，返回流程启动时落在的步骤 ID，
+     * 该步骤必须在构造函数中通过 {@link #registerStep(String, Step)} 注册过。</p>
      *
-     * @return 初始步骤ID
+     * @return 初始步骤 ID
      */
     protected abstract String getInitialStepId();
 
     /**
      * 步骤获取前的钩子方法。
      *
-     * <p>子类可以重写此方法，在获取步骤实例前做一些预处理，
-     * 比如根据条件跳转步骤。这个方法会在每次执行步骤前被调用，
-     * 可以用来修改currentStepId，从而改变将要执行的步骤。</p>
+     * <p>子类可以重写此方法，在获取步骤实例前做一些预处理，比如根据条件跳转步骤。
+     * 此方法在每次执行步骤前被调用，可以通过修改 {@code currentStepId}
+     * 或调用 {@link #jumpToStep(String)} 来改变将要执行的步骤。</p>
      *
      * @param context 步骤执行上下文
      */
     protected void beforeGetStep(StepExecutionContext<T> context) {}
 
     /**
-     * 将流程状态写入NBT。
+     * 将流程状态写入 NBT。
      *
-     * @param nbt 要写入的NBT复合标签
+     * @param nbt 要写入的 NBT 复合标签
      */
     public void writeToNbt(NbtCompound nbt) {
         if (currentStepId != null) {
@@ -343,9 +375,9 @@ public abstract class AbstractProcess<T> {
     }
 
     /**
-     * 从NBT读取流程状态。
+     * 从 NBT 读取流程状态。
      *
-     * @param nbt 要读取的NBT复合标签
+     * @param nbt 要读取的 NBT 复合标签
      */
     public void readFromNbt(NbtCompound nbt) {
         if (nbt.contains("current_step_id")) {
@@ -413,13 +445,11 @@ public abstract class AbstractProcess<T> {
     }
 
     /**
-     * 是否在toString输出中显示已注册的步骤列表。
-     * <p>
-     * 子类可以重写此方法来决定是否显示所有注册的步骤ID。
-     * 默认返回false，不显示步骤列表以保持输出简洁。
-     * </p>
+     * 是否在状态展示中显示已注册的步骤列表。
      *
-     * @return 如果应该显示步骤列表则返回true，默认返回false
+     * <p>默认返回 {@code false}，不显示步骤列表以保持输出简洁。</p>
+     *
+     * @return 如果应该显示步骤列表则返回 {@code true}
      */
     protected boolean shouldShowStepList() {
         return false;
@@ -428,7 +458,7 @@ public abstract class AbstractProcess<T> {
     /**
      * 获取子类自定义的状态信息。
      * <p>
-     * 子类可以重写此方法来添加额外的状态信息到{@link #getStatusDetail()}输出中。
+     * 子类可以重写此方法来添加额外的状态信息到 {@link #getStatusDetail()} 输出中。
      * 返回的字符串应该以多行形式组织，每行代表一个状态条目。
      * 例如：
      * <pre>
