@@ -204,7 +204,7 @@ public class AddContentPlayerAction extends PlayerAction {
      * 现与 {@link AddItemPlayerAction} 对齐提供访问器。</p>
      *
      * @return 内容物
-     * @since 1.0.3
+     * @since 1.0.4
      */
     public Content getContent() {
         return content;
@@ -214,7 +214,7 @@ public class AddContentPlayerAction extends PlayerAction {
      * 返回该操作要求的内容物数量。
      *
      * @return 内容物数量
-     * @since 1.0.3
+     * @since 1.0.4
      */
     public int getCount() {
         return count;

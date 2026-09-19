@@ -15,14 +15,14 @@ import org.twcore.api.blockvolume.BlockVolume;
  * 方块体信息由方块实体通过 NBT 同步的轻量快照提供（{@link BlockVolume#fromNbt}）。</p>
  *
  * @param <T> 对应的方块实体
- * @since 1.0.3
+ * @since 1.0.4
  */
 public interface BlockVolumeDebugRenderer<T extends BlockEntity> {
 
 	/**
 	 * 获取用于渲染的文本渲染器。
 	 *
-	 * @since 1.0.3
+	 * @since 1.0.4
 	 */
 	TextRenderer getTextRenderer();
 
@@ -31,7 +31,7 @@ public interface BlockVolumeDebugRenderer<T extends BlockEntity> {
 	 *
 	 * @param entity 对应的方块实体
 	 * @return 方块体；不属于任何方块体时返回 {@code null}
-	 * @since 1.0.3
+	 * @since 1.0.4
 	 */
 	@Nullable
 	BlockVolume getBlockVolume(T entity);
@@ -41,7 +41,7 @@ public interface BlockVolumeDebugRenderer<T extends BlockEntity> {
 	 *
 	 * @param matrices    变换矩阵。注意：此时的矩阵已经被变换到了渲染文字的地方，
 	 *                    如果需要一个新的矩阵，请再对矩阵进行一次推送
-	 * @since 1.0.3
+	 * @since 1.0.4
 	 */
 	default void otherDebugRender(T entity, BlockVolume volume, float tickDelta, MatrixStack matrices,
 								 VertexConsumerProvider vertexConsumers, int light, int overlay) {
@@ -50,7 +50,7 @@ public interface BlockVolumeDebugRenderer<T extends BlockEntity> {
 	/**
 	 * 渲染方块体调试信息。
 	 *
-	 * @since 1.0.3
+	 * @since 1.0.4
 	 */
 	default void renderDebugInfo(T entity, float tickDelta, MatrixStack matrices,
 								VertexConsumerProvider vertexConsumers, int light, int overlay) {

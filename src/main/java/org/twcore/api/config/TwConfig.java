@@ -95,7 +95,7 @@ public final class TwConfig {
      * @param configName 配置名称
      * @param <T>        预期的配置数据类型
      * @return 配置数据实例，如果指定配置尚未加载则返回 {@code null}
-     * @since 1.0.3
+     * @since 1.0.4
      */
     @Nullable
     public static <T> T get(String modId, String configName) {
@@ -118,7 +118,7 @@ public final class TwConfig {
      * @param <T>   配置数据类型，与 {@code type} 的泛型参数一致
      * @return 已加载的配置数据实例，永不为 {@code null}
      * @throws IllegalStateException 如果配置类型未注册，或已注册但尚未加载
-     * @since 1.0.3
+     * @since 1.0.4
      */
     public static <T> T get(String modId, ConfigType<T> type) {
         return ConfigManager.getRequired(modId, type);

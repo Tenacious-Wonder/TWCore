@@ -28,7 +28,7 @@ import org.twcore.environment.TimePointImp;
  *     <li>四季按<b>独立的 120 天周期</b>循环，与年月无关（见 {@link #getSeasonPhase()}）。</li>
  * </ul>
  *
- * @since 1.0.3
+ * @since 1.0.4
  * @see ClimateQuery
  */
 public interface TimePoint extends Comparable<TimePoint> {

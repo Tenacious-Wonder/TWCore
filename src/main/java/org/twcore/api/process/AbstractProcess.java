@@ -412,7 +412,7 @@ public abstract class AbstractProcess<T> {
      * </p>
      *
      * @return 流程状态的详细展示文本
-     * @since 1.0.3
+     * @since 1.0.4
      */
     public String getStatusDetail() {
         StringBuilder sb = new StringBuilder();

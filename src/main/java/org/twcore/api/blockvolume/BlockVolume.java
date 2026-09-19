@@ -83,7 +83,7 @@ import org.twcore.blockvolume.BlockVolumeManager;
  * }
  * }</pre>
  *
- * @since 1.0.3
+ * @since 1.0.4
  * @see BlockVolumeRegistry
  * @see BlockRange
  */
@@ -107,7 +107,7 @@ public interface BlockVolume {
      * @param baseBlock 构成方块体的方块
      * @param range     结构范围
      * @return 方块体实例
-     * @since 1.0.3
+     * @since 1.0.4
      */
     static BlockVolume of(@NotNull Block baseBlock, @NotNull BlockRange range) {
         return new BlockVolumeImpl(baseBlock, range);
@@ -118,7 +118,7 @@ public interface BlockVolume {
      *
      * @param nbt 由 {@link #toNbt()} 写出的快照
      * @return 方块体实例；反序列化失败时返回 {@code null}
-     * @since 1.0.3
+     * @since 1.0.4
      */
     @Nullable
     static BlockVolume fromNbt(@NotNull NbtCompound nbt) {
@@ -128,7 +128,7 @@ public interface BlockVolume {
     /**
      * 构成方块体的方块。
      *
-     * @since 1.0.3
+     * @since 1.0.4
      */
     @NotNull
     Block baseBlock();
@@ -136,7 +136,7 @@ public interface BlockVolume {
     /**
      * 结构范围。
      *
-     * @since 1.0.3
+     * @since 1.0.4
      */
     @NotNull
     BlockRange range();
@@ -144,7 +144,7 @@ public interface BlockVolume {
     /**
      * 结构原点（长方体最小角方块坐标），同时是结构的标识。
      *
-     * @since 1.0.3
+     * @since 1.0.4
      */
     @NotNull
     BlockPos masterPos();
@@ -152,7 +152,7 @@ public interface BlockVolume {
     /**
      * 结构的末端坐标（东南偏上位置，含边界）。
      *
-     * @since 1.0.3
+     * @since 1.0.4
      */
     @NotNull
     BlockPos endPos();
@@ -160,14 +160,14 @@ public interface BlockVolume {
     /**
      * 结构的体积（方块数量）。
      *
-     * @since 1.0.3
+     * @since 1.0.4
      */
     int getVolume();
 
     /**
      * 判断指定的世界位置是否在当前方块体范围内。
      *
-     * @since 1.0.3
+     * @since 1.0.4
      */
     boolean containsWorldPos(@NotNull BlockPos worldPos);
 
@@ -178,7 +178,7 @@ public interface BlockVolume {
      * @param relativeY 相对 Y 坐标，取值范围 [0, 高度)
      * @param relativeZ 相对 Z 坐标，取值范围 [0, 深度)
      * @throws IllegalArgumentException 如果相对坐标超出范围
-     * @since 1.0.3
+     * @since 1.0.4
      */
     @NotNull
     BlockPos getWorldPos(int relativeX, int relativeY, int relativeZ);
@@ -186,7 +186,7 @@ public interface BlockVolume {
     /**
      * 获取相对坐标对应的世界坐标。
      *
-     * @since 1.0.3
+     * @since 1.0.4
      */
     @NotNull
     BlockPos getWorldPos(@NotNull BlockPos relativePos);
@@ -195,7 +195,7 @@ public interface BlockVolume {
      * 获取世界位置对应的相对位置。
      *
      * @return 相对位置；若世界位置不在范围内返回 {@code null}
-     * @since 1.0.3
+     * @since 1.0.4
      */
     @Nullable
     BlockPos getRelativePosFromWorld(@NotNull BlockPos worldPos);
@@ -208,14 +208,14 @@ public interface BlockVolume {
      * {@link BlockVolumeManager#onChunkLoad} 再次校验。</p>
      *
      * @param world 用于对照的世界视图
-     * @since 1.0.3
+     * @since 1.0.4
      */
     boolean checkIntegrity(@NotNull WorldView world);
 
     /**
      * 序列化为 NBT，供客户端轻量快照同步（客户端没有服务端索引）。
      *
-     * @since 1.0.3
+     * @since 1.0.4
      */
     @NotNull
     NbtCompound toNbt();

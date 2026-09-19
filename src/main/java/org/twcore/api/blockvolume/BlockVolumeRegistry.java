@@ -43,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * }
  * }</pre>
  *
- * @since 1.0.3
+ * @since 1.0.4
  * @see BlockVolume
  * @see BlockVolumeManager
  */
@@ -56,7 +56,7 @@ public final class BlockVolumeRegistry {
 	 * <p>监听方检查变化方块体是否与自己相关（如基础方块匹配、范围覆盖自己的位置），
 	 * 再决定是否响应。回调见 {@link BlockVolumeChangeCallback}。</p>
 	 *
-	 * @since 1.0.3
+	 * @since 1.0.4
 	 * @see BlockVolumeChangeCallback
 	 * @see BlockVolumeChangeType
 	 */
@@ -74,7 +74,7 @@ public final class BlockVolumeRegistry {
 	 * 注册参与方块体系统的方块。重复注册无副作用。
 	 *
 	 * @param blocks 要注册的方块，允许一次传入多个
-	 * @since 1.0.3
+	 * @since 1.0.4
 	 */
 	public static void register(Block... blocks) {
 		Collections.addAll(REGISTERED, blocks);
@@ -84,7 +84,7 @@ public final class BlockVolumeRegistry {
 	 * 取消注册方块。取消后系统不再感知它的放置与破坏（已存在的结构记录不受影响）。
 	 *
 	 * @return 若该方块此前已注册返回 {@code true}
-	 * @since 1.0.3
+	 * @since 1.0.4
 	 */
 	public static boolean unregister(Block block) {
 		return REGISTERED.remove(block);
@@ -93,7 +93,7 @@ public final class BlockVolumeRegistry {
 	/**
 	 * 判断方块是否已注册参与方块体系统。
 	 *
-	 * @since 1.0.3
+	 * @since 1.0.4
 	 */
 	public static boolean isRegistered(Block block) {
 		return block != null && REGISTERED.contains(block);
@@ -103,7 +103,7 @@ public final class BlockVolumeRegistry {
 	 * 查找包含指定位置的方块体。
 	 *
 	 * @return 覆盖该位置的方块体；不属于任何方块体时返回 {@code null}
-	 * @since 1.0.3
+	 * @since 1.0.4
 	 */
 	@Nullable
 	public static BlockVolume findBlockVolume(World world, BlockPos pos) {

@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
  * @param width  X 轴方向方块数量
  * @param height Y 轴方向方块数量
  * @param depth  Z 轴方向方块数量
- * @since 1.0.3
+ * @since 1.0.4
  */
 public record BlockRange(@NotNull BlockPos start, int width, int height, int depth) {
 
@@ -42,7 +42,7 @@ public record BlockRange(@NotNull BlockPos start, int width, int height, int dep
 	/**
 	 * 最大角（东南上）方块坐标，含边界。
 	 *
-	 * @since 1.0.3
+	 * @since 1.0.4
 	 */
 	public @NotNull BlockPos end() {
 		return start.add(width - 1, height - 1, depth - 1);
@@ -51,7 +51,7 @@ public record BlockRange(@NotNull BlockPos start, int width, int height, int dep
 	/**
 	 * 范围内的方块数量。
 	 *
-	 * @since 1.0.3
+	 * @since 1.0.4
 	 */
 	public int volume() {
 		return width * height * depth;
@@ -60,7 +60,7 @@ public record BlockRange(@NotNull BlockPos start, int width, int height, int dep
 	/**
 	 * 判断世界坐标是否落在范围内。
 	 *
-	 * @since 1.0.3
+	 * @since 1.0.4
 	 */
 	public boolean contains(@NotNull BlockPos pos) {
 		BlockPos end = end();

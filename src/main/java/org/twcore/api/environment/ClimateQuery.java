@@ -34,7 +34,7 @@ import org.twcore.environment.ClimateQueryImpl;
  * 客户端调用一律返回中性值（温度 0.0、湿度 50.0），因此气候判定应放在服务端进行。
  * </p>
  *
- * @since 1.0.3
+ * @since 1.0.4
  * @see TimePoint
  */
 public class ClimateQuery {
