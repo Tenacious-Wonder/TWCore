@@ -8,6 +8,7 @@ import org.twcore.api.TwModManager;
 import org.twcore.api.event.TwCoreRegisterEvent;
 import org.twcore.blockvolume.BlockVolumeAttachments;
 import org.twcore.blockvolume.BlockVolumeManager;
+import org.twcore.bodypart.MeleeBodyPartDetector;
 import org.twcore.process.playeraction.PlayerActionFactory;
 import org.twcore.process.playeraction.impl.AddContentPlayerAction;
 import org.twcore.process.playeraction.impl.AddItemPlayerAction;
@@ -27,6 +28,7 @@ public class TWCore implements ModInitializer {
         ContainerTypes.initDefaultMappings();
         blockVolumeInit();
         registerDefaultAction();
+        MeleeBodyPartDetector.register();
 
         LOGGER.info("TW's Core is initializing!");
     }
