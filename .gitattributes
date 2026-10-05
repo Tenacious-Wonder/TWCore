@@ -1,4 +1,11 @@
-# Gradle wrapper 脚本在 Linux / CI 上必须以 LF 检出，否则 ./gradlew 会以 sh\r 失败
+# 一律按 LF 存进仓库，检出时保持原样
+* text=auto eol=lf
+
+# Gradle wrapper 脚本：Linux / CI 上必须以 LF 检出，否则 ./gradlew 会以 sh\r 失败
 gradlew text eol=lf
 gradlew.bat text eol=crlf
+
+# 二进制文件不做行尾转换
 *.jar binary
+*.png binary
+*.ogg binary
