@@ -119,13 +119,19 @@ public class TimePointImp implements TimePoint {
     @Override
     public boolean isSameDay(TimePoint other) { return getTotalDays() == other.getTotalDays(); }
 
+    // 分界与原版 /time 命令的固定值对齐：正午是 6000 刻、午夜是 18000 刻，
+    // 因此白天是 [0, 12000)、夜晚是 [13000, 24000)，傍晚的 [12000, 13000) 两段都不算
     @Override
     public boolean isDaytime() {
         long dt = getDayTicks();
-        return dt >= 6000 && dt < 18000;
+        return dt < 12000L;
     }
+
     @Override
-    public boolean isNighttime() { return !isDaytime(); }
+    public boolean isNighttime() {
+        long dt = getDayTicks();
+        return dt >= 13000L;
+    }
 
     // ==================== 格式化 ====================
     @Override
